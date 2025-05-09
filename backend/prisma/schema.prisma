@@ -67,8 +67,8 @@ model Server {
 
 model Audience {
   id              Int            @id @default(autoincrement())
-  year            Int
-  semester        Int
+  year            Int[]
+  semester        Int[]
   department      DptType[]
   userTypes       UserType[]     @map("user")
   usn             String[]
