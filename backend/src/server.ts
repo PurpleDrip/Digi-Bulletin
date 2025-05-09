@@ -1,4 +1,3 @@
-// backend/server.ts
 import express, { Request, Response } from 'express';
 import http from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
@@ -9,24 +8,25 @@ import mongoose from 'mongoose';
 dotenv.config();
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+}));
 app.use(express.json());
 
 const server = http.createServer(app);
 
 const io = new SocketIOServer(server, {
   cors: {
-    origin: '*',
+    origin: 'http://localhost:3000',
     methods: ['GET', 'POST']
   }
 });
 
-// API routes
 app.get('/api/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'ok' });
 });
 
-// Socket.io connection
 io.on('connection', (socket: Socket) => {
   console.log('New client connected');
 
