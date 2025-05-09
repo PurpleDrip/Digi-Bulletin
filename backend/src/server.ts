@@ -4,6 +4,13 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import bodyParser from 'body-parser';
+
+import db from './lib/prisma';
+import userRouter from './routes/userRouter';
+import serverRouter from './routes/serverRouter';
+import messageRouter from './routes/messageRouter';
+import reportRouter from './routes/reportRouter';
 
 dotenv.config();
 
@@ -13,6 +20,8 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
 }));
 app.use(express.json());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 const server = http.createServer(app);
 
@@ -26,6 +35,11 @@ const io = new SocketIOServer(server, {
 app.get('/api/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'ok' });
 });
+
+app.use("/api/user",userRouter);
+app.use("/api/server",serverRouter);
+app.use("/api/msg",messageRouter);
+app.use("/api/report",reportRouter);
 
 io.on('connection', (socket: Socket) => {
   console.log('New client connected');
