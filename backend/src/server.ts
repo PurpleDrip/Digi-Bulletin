@@ -4,6 +4,7 @@ import http from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import mongoose from 'mongoose';
 
 dotenv.config();
 
@@ -39,6 +40,15 @@ io.on('connection', (socket: Socket) => {
 });
 
 const PORT = process.env.PORT || 5000;
+
+mongoose.connect(process.env.MONGO_URL as string)
+  .then(()=>{
+    console.log("Connected to MongoDB Successfully.")
+  })
+  .catch(()=>{
+    console.log("Error connecting to MongoDB.")
+  })
+
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
