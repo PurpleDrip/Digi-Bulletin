@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+enum UserType { 
+  STUDENT
+  PROFESSOR
+  SUPPORT_STAFF
+  ADMIN 
+}
+
+enum DptType { 
+  CS
+  ME 
+  CY
+}
+
+enum SectionType { 
+  A 
+  B 
+  C 
+  D
+}
+
+enum ServerType {
+  SEMINAR
+  EVENT
+}
+
+model User {
+  id              Int           @id @default(autoincrement())
+  type            UserType
+  usn             String        @unique
+  name            String
+  department      DptType
+  admissionYear   Int
+  year            Int
+  semester        Int
+  section         SectionType
+  createdAt       DateTime      @default(now())
+
+  reportsFiled    Report[]      @relation("Reporter")
+  reportsReceived Report[]      @relation("Reported")
+}
+
+model Server {
+  id              Int           @id @default(autoincrement())
+  name            String      
+  type            ServerType  
+  about           String
+  createdAt       DateTime      @default(now())
+  allowAnonymous  Boolean       @default(false)
+
+  parent          Server?       @relation("ServerHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  parentId        Int?
+  childServers    Server[]      @relation("ServerHierarchy")
+  
+  audience        Audience      @relation(fields: [audienceId], references: [id])
+  audienceId      Int
+}
+
+model Audience {
+  id              Int            @id @default(autoincrement())
+  year            Int
+  semester        Int
+  department      DptType[]
+  userTypes       UserType[]     @map("user")
+  usn             String[]
+  guest           String[]
+  createdAt       DateTime       @default(now())
+
+  servers         Server[]
+}
+
+model Report {
+  id              Int           @id @default(autoincrement())
+  reason          String
+  severity        Int
+  fine            Float         @default(0.0)
+  createdAt       DateTime      @default(now())
+
+  reporter        User          @relation("Reporter", fields: [reporterId], references: [id])
+  reporterId      Int
+  reported        User          @relation("Reported", fields: [reportedId], references: [id])
+  reportedId      Int
+}

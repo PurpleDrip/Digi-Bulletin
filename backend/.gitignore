@@ -12,6 +12,10 @@ pnpm-debug.log*
 # Environment variables
 .env
 
+/src/generated/
+/prisma/generated/
+node_modules/.prisma
+
 # OS files
 .DS_Store
 Thumbs.db
