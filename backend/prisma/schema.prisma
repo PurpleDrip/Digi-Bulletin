@@ -9,16 +9,51 @@ datasource db {
 }
 
 enum UserType { 
-  STUDENT
-  PROFESSOR
-  SUPPORT_STAFF
-  ADMIN 
+  UG_STUDENT
+  PG_STUDENT
+
+  ASSISTANT_PROFS
+  ASSOCIATE_PROFS
+  PROFS
+
+  HOD
+  REGISTRAR
+  CLERKS
+
+  PRINCIPAL
+  DEAN
+  DIRECTOR
+  LIBRARIAN
+  LAB_ASSISTANT
+  SECURITY_STAFF
+  JANITORIAL_STAFF
+  TRANSPORT_STAFF
+  CAFETERIA_STAFF
+  LAB_TECHNICIANS
+  IT_STAFF
+
+  GUEST
+  ALUMINI
 }
 
 enum DptType { 
-  CS
-  ME 
-  CY
+  AE              //Aerospace Engineering
+  AIDS            //Artificial Intelligence and Data Science
+  AIML            //Artificial Intelligence and Machine Learning
+  BT              //Biotechnology
+  CH              //Chemical Engineering
+  CV              //Civil Engineering
+  CSE             //Computer Science and Engineering
+  CSE_AIML        //Computer Science and Engineering (AI-ML)
+  CSE_CS          //Computer Science and Engineering (Cyber Security)
+  EEE             //Electrical and Electronics Engineering
+  ECE             //Electronics & Communication Engineering
+  EIE             //Electronics & Instrumentation Engineering
+  ETC             //Electronics & Telecommunication Engineering
+  IEM             //Industrial Engineering & Management
+  ISE             //Information Science & Engineering	
+  ME              //Mechanical Engineering	
+  MEE             //Medical Electronics Engineering	
 }
 
 enum SectionType { 
