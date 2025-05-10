@@ -1,4 +1,7 @@
-import mongoose,{Schema} from "mongoose";
+import mongoose,{ Schema} from "mongoose";
+import { IMessage } from "../types/message";
+
+export interface MessageDocument extends IMessage, Document {}
 
 const PollOptionSchema = new Schema({
   option: { type: String, required: true },
@@ -14,7 +17,7 @@ const ReactionSchema = new Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-const MessageSchema = new Schema({
+const MessageSchema = new Schema<MessageDocument>({
   serverId: { type: Number, required: true, index: true }, 
   senderId: { type: Number, required: true, index: true }, 
   

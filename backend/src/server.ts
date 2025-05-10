@@ -1,16 +1,16 @@
 import express, { Request, Response } from 'express';
 import http from 'http';
-import { Server as SocketIOServer, Socket } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
 
-import db from './lib/prisma';
 import userRouter from './routes/userRouter';
 import serverRouter from './routes/serverRouter';
 import messageRouter from './routes/messageRouter';
 import reportRouter from './routes/reportRouter';
+import { registerSocketHandlers } from './handlers/socketHandlers';
 
 dotenv.config();
 
@@ -25,7 +25,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 const server = http.createServer(app);
 
-const io = new SocketIOServer(server, {
+const io = new Server(server, {
   cors: {
     origin: 'http://localhost:3000',
     methods: ['GET', 'POST']
@@ -42,14 +42,12 @@ app.use("/api/msg",messageRouter);
 app.use("/api/report",reportRouter);
 
 io.on('connection', (socket: Socket) => {
-  console.log('New client connected');
+  console.log('🔌 New client connected',socket.id);
 
-  socket.on('message', (data: any) => {
-    io.emit('message', data);
-  });
+  registerSocketHandlers(socket,io)
 
   socket.on('disconnect', () => {
-    console.log('Client disconnected');
+    console.log('❌ Client disconnected',socket.id);
   });
 });
 
