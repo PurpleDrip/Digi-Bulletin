@@ -73,6 +73,12 @@ enum ServerType {
   EVENT
 }
 
+enum StatusType {
+  pending
+  approved
+  blocked
+}
+
 model User {
   id              Int           @id @default(autoincrement())
   type            UserType
@@ -84,6 +90,8 @@ model User {
   semester        Int?
   section         SectionType?
   createdAt       DateTime       @default(now())
+
+  status          StatusType     @default(pending)
 
   reportsFiled    Report[]      @relation("Reporter")
   reportsReceived Report[]      @relation("Reported")
