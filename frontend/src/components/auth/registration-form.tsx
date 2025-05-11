@@ -34,9 +34,9 @@ const registrationFormSchema = z.object({
   userType: z.enum(USER_TYPES_ARRAY.map(ut => ut.value) as [UserTypeValue, ...UserTypeValue[]], {
     required_error: "Please select a user type.",
   }),
-  phoneNumber: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format. Include country code e.g. +1XXXXXXXXXX"),
+  phoneNumber: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format."),
   department: z.string().optional(),
-  year: z.string().optional(), // Year of study
+  year: z.string().optional(), 
   semester: z.string().optional(),
   yearOfAdmission: z.string().optional(),
   section: z.string().optional(),

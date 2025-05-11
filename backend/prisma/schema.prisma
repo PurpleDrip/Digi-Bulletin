@@ -9,33 +9,36 @@ datasource db {
 }
 
 enum UserType { 
-  ADMIN
+  UG_STUDENT                          //1MS-20-CS-001                //999 students per Semester
+  PG_STUDENT                          //1MS-20-CS-001                //999 students per Semester
 
-  UG_STUDENT
-  PG_STUDENT
+  ASSISTANT_PROFS                     //1MS-AS-CS-001                //999 per Department
+  ASSOCIATE_PROFS                     //1MS-AP-ME-001                //999 per Department
+  PROFS                               //1MS-PP-CE-001                //999 per Department
 
-  ASSISTANT_PROFS
-  ASSOCIATE_PROFS
-  PROFS
+  HOD                                 //1MS-HD-CS-001                //999 per Department
+  REGISTRAR                           //1MS-RR-CS-001                //999 per Department
+  CLERKS                              //1MS-CK-ME-001                //999 per Department
+  COORDINATOR                         //1MS-CR-CE-001                //999 per Department
 
-  HOD
-  REGISTRAR
-  CLERKS
 
-  PRINCIPAL
-  DEAN
-  DIRECTOR
-  LIBRARIAN
-  LAB_ASSISTANT
-  SECURITY_STAFF
-  JANITORIAL_STAFF
-  TRANSPORT_STAFF
-  CAFETERIA_STAFF
-  LAB_TECHNICIANS
-  IT_STAFF
+  //roles which need no DEPARTMENT
 
-  GUEST
-  ALUMINI
+  PRINCIPAL                           //1MS-PR-XX-001                //999 users
+  DEAN                                //1MS-DE-XX-001                //999 users
+  DIRECTOR                            //1MS-DR-XX-001                //999 users
+  LIBRARIAN                           //1MS-LB-XX-001                //999 users
+  LAB_ASSISTANT                       //1MS-LA-XX-001                //999 users
+  SECURITY_STAFF                      //1MS-SC-XX-001                //999 users
+  JANITORIAL_STAFF                    //1MS-JT-XX-001                //999 users
+  TRANSPORT_STAFF                     //1MS-TS-XX-001                //999 users
+  CAFETERIA_STAFF                     //1MS-CF-XX-001                //999 users
+  LAB_TECHNICIANS                     //1MS-LT-XX-001                //999 users
+  IT_STAFF                            //1MS-IT-XX-001                //999 users
+
+  GUEST                               //1MS-X-G-00001                //10,48,575 guests
+  ALUMINI                             //1MS-X-A-00001                //10,48,575 alumini
+  ADMIN                               //1MS-X-X-00001                //10,48,575 admins
 }
 
 enum DptType { 
