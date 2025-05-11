@@ -1,26 +1,99 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: 0 0% 98%; /* Light Background - Almost White */
+    --foreground: 0 0% 7%; /* Dark Foreground - Dark Gray/Black */
+
+    --card: 0 0% 100%; /* White for cards */
+    --card-foreground: 0 0% 7%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 7%;
+
+    --primary: 0 100% 27%; /* Dark Red #8B0000 */
+    --primary-foreground: 0 0% 98%; /* White */
+
+    --secondary: 0 0% 95%; /* Light gray for secondary elements */
+    --secondary-foreground: 0 0% 7%;
+
+    --muted: 0 0% 95%;
+    --muted-foreground: 0 0% 40%; /* Darker gray for muted text on light bg */
+
+    --accent: 0 0% 20%; /* Dark Gray for accent elements on light bg */
+    --accent-foreground: 0 0% 98%; /* White for text on accent */
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 85%; /* Lighter border */
+    --input: 0 0% 90%; /* Lighter input background */
+    --ring: 0 100% 37%; /* Brighter red for focus rings */
+
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+
+    /* Sidebar variables for light theme */
+    --sidebar-background: 0 0% 96%; /* Light Gray */
+    --sidebar-foreground: 0 0% 10%; /* Dark Gray */
+    --sidebar-primary: 0 100% 27%; /* Dark Red */
+    --sidebar-primary-foreground: 0 0% 98%; /* White */
+    --sidebar-accent: 0 0% 90%; /* Lighter Gray */
+    --sidebar-accent-foreground: 0 0% 10%; /* Dark Gray */
+    --sidebar-border: 0 0% 85%; /* Light Border */
+    --sidebar-ring: 0 100% 37%; /* Brighter Red */
+  }
+
+  .dark {
+    --background: 0 0% 7%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 100% 27%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 0 0% 82.7%; /* Light Gray #D3D3D3 for dark theme accent */
+    --accent-foreground: 0 0% 7%; /* Dark Gray/Black for text on accent */
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 0 100% 37%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    
+    /* Sidebar variables for dark theme */
+    --sidebar-background: 0 0% 10%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 0 100% 27%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 0 100% 37%;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    /* font-family removed to allow Geist font from layout.tsx to take precedence */
+  }
 }

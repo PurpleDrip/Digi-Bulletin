@@ -9,6 +9,8 @@ datasource db {
 }
 
 enum UserType { 
+  ADMIN
+
   UG_STUDENT
   PG_STUDENT
 
@@ -73,12 +75,12 @@ model User {
   type            UserType
   usn             String        @unique
   name            String
-  department      DptType
-  admissionYear   Int
-  year            Int
-  semester        Int
-  section         SectionType
-  createdAt       DateTime      @default(now())
+  department      DptType?
+  admissionYear   Int?
+  year            Int?
+  semester        Int?
+  section         SectionType?
+  createdAt       DateTime       @default(now())
 
   reportsFiled    Report[]      @relation("Reporter")
   reportsReceived Report[]      @relation("Reported")
