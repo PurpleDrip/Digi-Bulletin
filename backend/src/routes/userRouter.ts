@@ -1,6 +1,8 @@
-import { Router } from "express";
-import { validateRegisterUserInput } from "../middlewares/validate";
-import { registerUser } from "../controllers/userController";
+import { Response, Router } from "express";
+import { validateLoginUserInput, validateRegisterUserInput } from "../middlewares/validate";
+import { getPendingAcc, registerUser } from "../controllers/userController";
+import { authenticateUser } from "../middlewares/authenticate";
+import { appendCookies } from "../controllers/authController";
 
 const userRouter = Router();
 
@@ -11,6 +13,13 @@ userRouter.get('/', async (req, res, next)=> {
 
 userRouter.post("/register-user",validateRegisterUserInput,registerUser)
 
-// userRouter.post("/login-user",validateLoginUserInput)
+userRouter.post("/login-user",validateLoginUserInput,appendCookies,(req,res:Response):void=> {
+    res.status(200).json({success:true,message:"Successfully logged in."});
+    return;
+    })
+
+userRouter.get("/pending-acc",authenticateUser,getPendingAcc);
+
+
 
 export default userRouter;

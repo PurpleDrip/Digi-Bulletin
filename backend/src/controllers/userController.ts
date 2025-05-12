@@ -43,3 +43,35 @@ export const registerUser=async (req:Request,res:Response):Promise<void> =>{
         return;
     }
 }
+
+export const getPendingAcc=async (req:Request,res:Response): Promise<void> =>{
+    const user=res.locals.userType;
+
+    if(!user || user!=="ADMIN"){
+        res.status(403).json({
+            success:false,
+            message:"Only admin can perform this action."
+        })
+        return;
+    }
+
+    try{
+        const pendingAcc=await prisma.user.findMany({
+            where:{status:"pending"},
+        });
+
+        res.status(200).json({
+            success:true,
+            data:pendingAcc
+        })
+        return;
+
+    }catch(e){
+        console.log(e)
+        res.status(500).json({
+            success:false,
+            message:"Error fetching the Users."
+        })
+        return;
+    }
+}

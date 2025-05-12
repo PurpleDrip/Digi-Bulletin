@@ -5,11 +5,13 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
+import cookieParser from "cookie-parser"
 
 import userRouter from './routes/userRouter';
 import serverRouter from './routes/serverRouter';
 import messageRouter from './routes/messageRouter';
 import reportRouter from './routes/reportRouter';
+import authRouter from './routes/authRouter';
 import { registerSocketHandlers } from './handlers/socketHandlers';
 
 dotenv.config();
@@ -22,6 +24,7 @@ app.use(cors({
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser())
 
 const server = http.createServer(app);
 
@@ -36,6 +39,7 @@ app.get('/api/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'ok' });
 });
 
+app.use("/api/auth",authRouter)
 app.use("/api/user",userRouter);
 app.use("/api/server",serverRouter);
 app.use("/api/msg",messageRouter);
