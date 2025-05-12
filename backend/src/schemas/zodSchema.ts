@@ -42,7 +42,7 @@ export const passwordSchema=z
 
 export const userSchema=z.object({
     usn:usnSchema,
-    type:z.enum(["STUDENT","ASSISTANT_PROFS","ASSOCIATE_PROFS","PROFS","HOD","REGISTRAR","CLERKS","COORDINATOR","PRINCIPAL","DEAN",
+    type:z.enum(["STUDENT","ASSISTANT_PROFR","ASSOCIATE_PROFR","PROFR","HOD","REGISTRAR","CLERKS","COORDINATOR","PRINCIPAL","DEAN",
             "DIRECTOR","LIBRARIAN","LAB_ASSISTANT","SECURITY_STAFF","JANITORIAL_STAFF","TRANSPORT_STAFF","CAFETERIA_STAFF","LAB_TECHNICIANS","IT_STAFF",
             "GUEST","ALUMINI","ADMIN"
         ],{
@@ -55,7 +55,7 @@ export const userSchema=z.object({
         .regex(/^[A-Za-z\s]+$/, {
         message: "Name can only contain letters and spaces",
         }),
-    department:z.enum(["AE","AIDS","AIML","BT","CH","CV","CSE","CSE_AIML","CSE_CS","EEE","ECE","EIE","ETC","IEM","ISE","ME","MEE"]).optional(),
+    department:z.enum(["AE","AD","AI","BT","CH","CV","CS","CI","CY","EE","EC","EI","ET","IM","IS","ME","MED","AT"]).optional(),
     admissionYear: z.string().regex(/^\d{4}$/, {
         message: "Admission year must be a 4-digit number"
       }).optional(),

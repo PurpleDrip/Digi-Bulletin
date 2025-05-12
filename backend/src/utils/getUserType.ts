@@ -1,11 +1,11 @@
 const getUserType = (key: string): string => {
     switch (key) {
       case "AS":
-        return "ASSISTANT_PROFS";
+        return "ASSISTANT_PROFR";
       case "AP":
-        return "ASSOCIATE_PROFS";
+        return "ASSOCIATE_PROFR";
       case "PP":
-        return "PROFS";
+        return "PROFR";
       case "HD":
         return "HOD";
       case "RR":

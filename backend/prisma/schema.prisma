@@ -13,9 +13,9 @@ enum UserType {
   STUDENT                             //1MS-20-CS-001                //999 students per Semester
 
   //Tier-2
-  ASSISTANT_PROFS                     //1MS-AS-CS-001                //999 per Department
-  ASSOCIATE_PROFS                     //1MS-AP-ME-001                //999 per Department
-  PROFS                               //1MS-PP-CE-001                //999 per Department
+  ASSISTANT_PROFR                     //1MS-AS-CS-001                //999 per Department
+  ASSOCIATE_PROFR                     //1MS-AP-ME-001                //999 per Department
+  PROFR                               //1MS-PP-CE-001                //999 per Department
   HOD                                 //1MS-HD-CS-001                //999 per Department
   REGISTRAR                           //1MS-RR-CS-001                //999 per Department
   CLERKS                              //1MS-CK-ME-001                //999 per Department
@@ -42,22 +42,23 @@ enum UserType {
 
 enum DptType { 
   AE              //Aerospace Engineering
-  AIDS            //Artificial Intelligence and Data Science
-  AIML            //Artificial Intelligence and Machine Learning
+  AD              //Artificial Intelligence and Data Science
+  AI              //Artificial Intelligence and Machine Learning
   BT              //Biotechnology
   CH              //Chemical Engineering
   CV              //Civil Engineering
-  CSE             //Computer Science and Engineering
-  CSE_AIML        //Computer Science and Engineering (AI-ML)
-  CSE_CS          //Computer Science and Engineering (Cyber Security)
-  EEE             //Electrical and Electronics Engineering
-  ECE             //Electronics & Communication Engineering
-  EIE             //Electronics & Instrumentation Engineering
-  ETC             //Electronics & Telecommunication Engineering
-  IEM             //Industrial Engineering & Management
-  ISE             //Information Science & Engineering	
+  CS              //Computer Science and Engineering
+  CI              //Computer Science and Engineering (AI-ML)
+  CY              //Computer Science and Engineering (Cyber Security)
+  EE              //Electrical and Electronics Engineering
+  EC              //Electronics & Communication Engineering
+  EI              //Electronics & Instrumentation Engineering
+  ET              //Electronics & Telecommunication Engineering
+  IM              //Industrial Engineering & Management
+  IS              //Information Science & Engineering	
   ME              //Mechanical Engineering	
-  MEE             //Medical Electronics Engineering	
+  MD              //Medical Electronics Engineering	
+  AT              //Architecture
 }
 
 enum SectionType { 

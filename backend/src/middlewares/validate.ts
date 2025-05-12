@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from "express";
 
 import decodeUSN from "../utils/decodeUSN";
 import getUserType from "../utils/getUserType";
-import { userSchema, usnSchema } from "../types/zodTypes";
+import { userSchema, usnSchema } from "../schemas/zodSchema";
 
 export const validateRegisterUserInput=(req:Request,res:Response,next:NextFunction):void=>{
 
@@ -31,15 +31,11 @@ export const validateRegisterUserInput=(req:Request,res:Response,next:NextFuncti
     switch(decodeUSN(usn)){
         case 3:
             const admissionYear=Number("20"+usn.slice(3,5));
-            const currentYear = new Date().getFullYear();
-            const year=Math.min(4, Math.max(1, currentYear - admissionYear));
-
 
             userData={
                 ...providedData,
                 type:"STUDENT",
                 admissionYear:admissionYear.toString(),
-                year,
                 department:usn.slice(5,7)
             }
             break;
@@ -75,6 +71,5 @@ export const validateRegisterUserInput=(req:Request,res:Response,next:NextFuncti
 
     res.locals.data=response.data;
 
-    console.log(res.locals.data)
     next();
 }
