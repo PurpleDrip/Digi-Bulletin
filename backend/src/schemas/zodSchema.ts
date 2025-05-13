@@ -1,3 +1,4 @@
+import { ServerType } from "@prisma/client";
 import { z } from "zod";
 
 export const usnSchema = z
@@ -55,7 +56,7 @@ export const userSchema=z.object({
         .regex(/^[A-Za-z\s]+$/, {
         message: "Name can only contain letters and spaces",
         }),
-    department:z.enum(["AE","AD","AI","BT","CH","CV","CS","CI","CY","EE","EC","EI","ET","IM","IS","ME","MED","AT"]).optional(),
+    department:z.enum(["AE","AD","AI","BT","CH","CV","CS","CI","CY","EE","EC","EI","ET","IM","IS","ME","MD","AT"]).optional(),
     admissionYear: z.string().regex(/^\d{4}$/, {
         message: "Admission year must be a 4-digit number"
       }).optional(),
@@ -65,4 +66,30 @@ export const userSchema=z.object({
         message:"Phone number must be exactly 10 digits."
     }),
 
+})
+
+export const audienceSchema = z.object({
+  audienceYear: z.array(z.number()).optional(),
+  audienceSemester: z.array(z.number().min(1).max(8)).optional(),
+  audienceDepartment: z.array(z.enum([
+    "AE","AD","AI","BT","CH","CV","CS","CI","CY","EE",
+    "EC","EI","ET","IM","IS","ME","MD","AT"
+  ])).optional(),
+  audienceUserType: z.array(z.enum([
+    "STUDENT","ASSISTANT_PROFR","ASSOCIATE_PROFR","PROFR","HOD","REGISTRAR","CLERKS",
+    "COORDINATOR","PRINCIPAL","DEAN","DIRECTOR","LIBRARIAN","LAB_ASSISTANT",
+    "SECURITY_STAFF","JANITORIAL_STAFF","TRANSPORT_STAFF","CAFETERIA_STAFF",
+    "LAB_TECHNICIANS","IT_STAFF","GUEST","ALUMINI","ADMIN"
+  ], {
+    message: "This TYPE of user was not found or is invalid."
+  })).optional(),
+  audienceUsn: z.array(usnSchema).optional(),
+});
+
+export const serverSchema=z.object({
+  serverName:z.string().min(2).max(20),
+  serverType:z.nativeEnum(ServerType),
+  serverAbout:z.string().min(3).max(35),
+  serverAllowAnonymous:z.boolean(),
+  serverParentId:z.number().optional()
 })

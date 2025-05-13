@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'DigiConnect',
+  title: 'Digi Bulletin',
   description: 'Interactive platform for seamless connections.',
 };
 
