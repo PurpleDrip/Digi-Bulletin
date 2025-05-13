@@ -1,6 +1,6 @@
 import { Response, Router } from "express";
 import { validateLoginUserInput, validateRegisterUserInput } from "../middlewares/validate";
-import { getPendingAcc, registerUser } from "../controllers/userController";
+import { approveUser, getPendingAcc, registerUser, updateUser } from "../controllers/userController";
 import { authenticateUser } from "../middlewares/authenticate";
 import { appendCookies } from "../controllers/authController";
 
@@ -20,6 +20,9 @@ userRouter.post("/login-user",validateLoginUserInput,appendCookies,(req,res:Resp
 
 userRouter.get("/pending-acc",authenticateUser,getPendingAcc);
 
+userRouter.post("/update-user",authenticateUser,updateUser)
+
+userRouter.post("/approve-user",authenticateUser,approveUser)
 
 
 export default userRouter;
