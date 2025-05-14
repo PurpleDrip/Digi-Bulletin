@@ -136,13 +136,15 @@ model Server {
 
 model Audience {
   id              Int            @id @default(autoincrement())
+
+  userType        UserType  
+
   year            Int[]
   semester        Int[]
   department      DptType[]
-  userTypes       UserType[]     @map("user")
+
   usn             String[]
   createdAt       DateTime       @default(now())
-
   servers         Server[]
 }
 
