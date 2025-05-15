@@ -6,7 +6,7 @@ pipeline {
     stages {
         stage('Git Clone') {
             steps {
-                echo 'Git Cloning the Project'
+                git branch: 'main', url: 'https://github.com/PurpleDrip/Digi-Bulletin.git'
             }
         }
 
