@@ -1,5 +1,6 @@
-import { NextFunction, Request, Response, Router } from "express";
-import { createServer } from "../controllers/serverController";
+import {  Router } from "express";
+import { appendAudience, createServer } from "../controllers/serverController";
+import { authenticateOwner, authenticateUser } from "../middlewares/authenticate";
 
 const serverRouter = Router();
 
@@ -8,9 +9,8 @@ serverRouter.get('/', function (req, res, next) {
     res.end();
 });
 
-serverRouter.post("/create-server",(req:Request,res:Response,next:NextFunction)=>{
-    res.locals.ownerId=4;
-    next();
-},createServer)
+serverRouter.post("/create-server",authenticateUser, authenticateOwner,createServer)
+
+serverRouter.post("/add-audience",authenticateUser, authenticateOwner, appendAudience)
 
 export default serverRouter;

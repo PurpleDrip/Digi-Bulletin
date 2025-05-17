@@ -1,11 +1,10 @@
 import { Request, Response } from "express";
-import { serverSchema } from "../schemas/zodSchema";
+import { audienceGroupSchema, serverSchema } from "../schemas/zodSchema";
 import prisma from "../lib/prisma";
 
 export const createServer = async (req: Request, res: Response): Promise<void> => {
-  const  ownerId  = res.locals.ownerId; // Assuming `ownerId` is set via some middleware.
+  const {ownerId}  = res.locals;
 
-  // Validate input with Zod schema
   const response = serverSchema.safeParse(req.body);
 
   if (!response.success) {
@@ -19,7 +18,6 @@ export const createServer = async (req: Request, res: Response): Promise<void> =
   }
 
   try {
-    // Check if the user exists as the server owner
     const user = await prisma.user.findUnique({
       where: { id: ownerId },
     });
@@ -32,7 +30,6 @@ export const createServer = async (req: Request, res: Response): Promise<void> =
       return;
     }
 
-    // Check if audienceGroups is empty
     if (response.data.audienceGroups.length === 0) {
       res.status(400).json({
         success: false,
@@ -95,3 +92,73 @@ export const createServer = async (req: Request, res: Response): Promise<void> =
     });
   
 };
+
+export const appendAudience=async(req:Request,res:Response):Promise<void> =>{
+    const { name, ownerId } = req.body;
+
+    const response=audienceGroupSchema.safeParse(req.body);    if(!response.success){
+        res.status(400).json({
+            success:false,
+            message:"Invalid input."
+        });
+        return;
+    }
+    const newGroups = response.data; 
+
+    const server = await prisma.server.findFirst({
+    where: {
+        name,
+        ownerId,
+    },
+    include: {
+        audience: true,
+        },
+    });
+
+    if (!server) {
+        res.status(404).json({ success: false, message: "Server not found." });
+        return;
+    }    if (!server.audience) {
+    await prisma.audience.create({
+        data: {
+        servers: { connect: { id: server.id } },
+        groups: {
+            create: newGroups.map(group => ({
+            include: group.include,
+            userType: group.userType,
+            department: group.department ?? null,
+            year: group.year ?? [],
+            semester: group.semester ?? [],
+            section: group.section ?? [],
+            usns: group.usns ?? [],
+            })),
+        },
+        },
+    });
+    } else if (newGroups && newGroups.length > 0) {
+    // If audience exists and we have new groups to add, append them
+    await prisma.audience.update({
+        where: { id: server.audience.id },
+        data: {
+        groups: {
+            create: newGroups.map(group => ({
+            include: group.include,
+            userType: group.userType,
+            department: group.department ?? null,
+            year: group.year ?? [],
+            semester: group.semester ?? [],
+            section: group.section ?? [],
+            usns: group.usns ?? [],
+            })),
+        },
+        },
+    });
+    }
+
+    res.status(200).json({
+    success: true,
+    message: "Audience groups appended successfully.",
+    });
+    return;
+
+}

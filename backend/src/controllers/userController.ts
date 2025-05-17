@@ -46,7 +46,7 @@ export const registerUser=async (req:Request,res:Response):Promise<void> =>{
 }
 
 export const getPendingAcc=async (req:Request,res:Response): Promise<void> =>{
-    const user=res.locals.userType;
+    const {user}=res.locals;
 
     if(!user || user!=="ADMIN"){
         res.status(403).json({
@@ -79,7 +79,7 @@ export const getPendingAcc=async (req:Request,res:Response): Promise<void> =>{
 
 export const updateUser = async (req: Request, res: Response): Promise<void> => {
     const { id, type, usn, name, department, admissionYear, year, semester, section } = req.body;
-    const user=res.locals.userType;
+    const {user}=res.locals;
 
     if(!user || user!=="ADMIN"){
         res.status(403).json({
@@ -168,7 +168,7 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
 
 export const approveUser=async (req:Request,res:Response):Promise<void> =>{
     const {id}=req.body;
-    const user=res.locals.userType;
+    const {user}=res.locals;
 
     if(!user || user!=="ADMIN"){
         res.status(403).json({
