@@ -8,8 +8,9 @@ datasource db {
   directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
-enum UserType { 
-  //Tier-3
+enum UserType{
+
+  //Tier-1
   STUDENT                             //1MS-20-CS-001                //999 students per Semester
 
   //Tier-2
@@ -135,18 +136,29 @@ model Server {
 }
 
 model Audience {
-  id              Int            @id @default(autoincrement())
+  id         Int              @id @default(autoincrement())
+  createdAt  DateTime         @default(now())
+  
+  groups     AudienceGroup[]  // multiple rules per audience
 
-  userType        UserType  
-
-  year            Int[]
-  semester        Int[]
-  department      DptType[]
-
-  usn             String[]
-  createdAt       DateTime       @default(now())
-  servers         Server[]
+  servers    Server[]         // linked to server(s)
 }
+
+model AudienceGroup {
+  id           Int              @id @default(autoincrement())
+  audience     Audience         @relation(fields: [audienceId], references: [id])
+  audienceId   Int
+
+  include      Boolean          
+  userType     UserType         
+
+  department   DptType?         
+  year         Int[]           
+  semester     Int[]           
+  section      SectionType[]   
+  usns         String[]        
+}
+
 
 model Report {
   id              Int           @id @default(autoincrement())
