@@ -68,28 +68,35 @@ export const userSchema=z.object({
 
 })
 
-export const audienceSchema = z.object({
-  audienceYear: z.array(z.number()).optional(),
-  audienceSemester: z.array(z.number().min(1).max(8)).optional(),
-  audienceDepartment: z.array(z.enum([
-    "AE","AD","AI","BT","CH","CV","CS","CI","CY","EE",
-    "EC","EI","ET","IM","IS","ME","MD","AT"
-  ])).optional(),
-  audienceUserType: z.array(z.enum([
+export const audienceGroupSchema = z.array(z.object({
+  include:z.boolean(),
+  userType: z.enum([
     "STUDENT","ASSISTANT_PROFR","ASSOCIATE_PROFR","PROFR","HOD","REGISTRAR","CLERKS",
     "COORDINATOR","PRINCIPAL","DEAN","DIRECTOR","LIBRARIAN","LAB_ASSISTANT",
     "SECURITY_STAFF","JANITORIAL_STAFF","TRANSPORT_STAFF","CAFETERIA_STAFF",
     "LAB_TECHNICIANS","IT_STAFF","GUEST","ALUMINI","ADMIN"
   ], {
     message: "This TYPE of user was not found or is invalid."
+  }),
+  department: z.enum([
+    "AE","AD","AI","BT","CH","CV","CS","CI","CY","EE",
+    "EC","EI","ET","IM","IS","ME","MD","AT"
+  ]).optional(),
+  year: z.array(z.number()).optional(),
+  semester: z.array(z.number().min(1).max(8)).optional(),
+  section:z.array(z.enum(["A","B","C","D"],{
+    message:"The entered for field:Section is invalid."
   })).optional(),
-  audienceUsn: z.array(usnSchema).optional(),
-});
+  usns: z.array(usnSchema).optional(),
+}));
 
 export const serverSchema=z.object({
-  serverName:z.string().min(2).max(20),
-  serverType:z.nativeEnum(ServerType),
-  serverAbout:z.string().min(3).max(35),
-  serverAllowAnonymous:z.boolean(),
-  serverParentId:z.number().optional()
+  name:z.string().min(2).max(20),
+  type:z.nativeEnum(ServerType),
+  about:z.string().min(3).max(35),
+  allowAnonymous:z.boolean(),
+  parentId:z.number().optional(),
+  ownerId:z.number(),
+  audienceGroups: audienceGroupSchema,
+
 })

@@ -110,10 +110,10 @@ model User {
 
   status          StatusType     @default(pending)
 
-  reportsFiled    Report[]      @relation("Reporter")
-  reportsReceived Report[]      @relation("Reported")
+  reportsFiled    Report[]       @relation("Reporter")
+  reportsReceived Report[]       @relation("Reported")
 
-  ownedServer     Server[]        @relation("Owner")      
+  ownedServer     Server[]       @relation("Owner")      
 }
 
 model Server {
@@ -139,9 +139,9 @@ model Audience {
   id         Int              @id @default(autoincrement())
   createdAt  DateTime         @default(now())
   
-  groups     AudienceGroup[]  // multiple rules per audience
+  groups     AudienceGroup[]  
 
-  servers    Server[]         // linked to server(s)
+  servers    Server[]         
 }
 
 model AudienceGroup {
