@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken"
 import prisma from "../lib/prisma";
@@ -28,7 +27,7 @@ export const authenticateUser=(req:Request,res:Response,next:NextFunction)=>{
     }
 }
 
-export const authenticateOwner=async (req:Request,res:Response,next:NextFunction)=>{
+export const authenticateOwner=async (req:Request,res:Response,next:NextFunction):Promise<void>=>{
 
     const {id}=res.locals;
     const {serverName}=req.body;

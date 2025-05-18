@@ -161,3 +161,40 @@ export const appendAudience=async(req:Request,res:Response):Promise<void> =>{
     return;
 
 }
+
+export const getUserInfo= async (req:Request,res:Response):Promise<void>=>{
+    const userInfo=res.locals;
+    let serverIds:number[]|null=null;
+
+    try{
+        const server=await prisma.server.findMany({
+            where:{
+                ownerId:userInfo.id
+            }
+        })
+
+        if(server){
+            serverIds=server.map((server)=>{
+                return server.id;
+            })
+        }
+
+        res.status(200).json({
+            success:true,
+            message:"User has cookies.",
+            data:{
+                user:userInfo,
+                server:serverIds
+            }
+        })
+        return;
+        
+    }catch(e){
+        console.log(e);
+        res.status(500).json({
+            success:false,
+            message:"Internal Server Error."
+        })
+        return;
+    }
+}
