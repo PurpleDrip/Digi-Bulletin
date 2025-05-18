@@ -33,7 +33,7 @@ export const sendOtp=async(req:Request,res:Response):Promise<void> =>{
     return;
 }
 
-export const validateOtp=async (req:Request,res:Response):Promise<void> =>{
+export const validateOtp=async (req:Request,res:Response,next:NextFunction):Promise<void> =>{
     const {phoneNumber,otp}=req.body;
 
     const validPhonenumber=z.string().regex(/^\d{10}$/,{
@@ -76,11 +76,7 @@ export const validateOtp=async (req:Request,res:Response):Promise<void> =>{
         return;
     }
 
-    res.status(200).json({
-        success:false,
-        message:"Phone Number Verified."
-    })
-    return;
+    next();
 }
 
 export const appendCookies = (req: Request, res: Response,next:NextFunction): void => {

@@ -5,9 +5,7 @@ import { getUserInfo } from "../controllers/serverController";
 
 const authRouter=e.Router();
 
-authRouter.get("/send-otp",sendOtp);
-
-authRouter.post("/validate-otp",validateOtp)
+authRouter.post("/send-otp",sendOtp);
 
 authRouter.get("/checkforcookies",authenticateUser,getUserInfo);
 

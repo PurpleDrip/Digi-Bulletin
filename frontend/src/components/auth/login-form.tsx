@@ -1,11 +1,11 @@
-
 "use client";
 
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Hash, Phone, KeyRound, Loader2 } from "lucide-react";
+import { Hash, Phone, KeyRound, Loader2, Lock } from "lucide-react";
+import { AxiosError } from "axios";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -18,10 +18,15 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { loginUser, sendotp} from "@/api/auth";
+import { useRouter } from "next/navigation";
+import { passwordSchema } from "@/schema/passwordSchema";
+import { usnSchema } from "@/schema/usnSchema";
 
 const loginFormSchema = z.object({
-  usn: z.string().min(3, "USN must be at least 3 characters."),
+  usn:usnSchema,
   phoneNumber: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format. Include country code e.g. +1XXXXXXXXXX"),
+  password: passwordSchema,
   otp: z.string().length(6, "OTP must be 6 digits."),
 });
 
@@ -29,34 +34,55 @@ type LoginFormValues = z.infer<typeof loginFormSchema>;
 
 export function LoginForm() {
   const { toast } = useToast();
+  const router = useRouter();
+
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isOtpSent, setIsOtpSent] = React.useState(false);
   const [disable,setDisable] = React.useState(true);
 
   const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginFormSchema),
-    defaultValues: {
+    resolver: zodResolver(loginFormSchema),    defaultValues: {
       usn: "",
       phoneNumber: "",
+      password: "",
       otp: "",
     },
   });
 
   async function onSubmit(data: LoginFormValues) {
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsSubmitting(false);
+    try{
+    const res=await loginUser(data);
+    console.log("res",res);
 
-    console.log(data);
-    toast({
-      title: "Login Attempt",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-background p-4">
-          <code className="text-foreground">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-    });
+    if(res.data.success){
+      toast({
+        title: "Login Successful",
+        description: "Welcome back!",
+        variant: "default",
+      });
+      router.push("/home");
+    }
+
+  } catch (e) {
+    console.log(e);
+    if (e instanceof AxiosError) {
+      toast({
+        title: "Error",
+        description: e.response?.data?.message || "An error occurred while logging in.",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while logging in.",
+        variant: "destructive",
+      });
+    }
+  }
+    setIsSubmitting(false);
+    setIsOtpSent(false);
+    setDisable(true);
     form.reset();
   }
 
@@ -75,6 +101,26 @@ export function LoginForm() {
                   <Input placeholder="e.g., 1MS20CS001" {...field} className="pl-10"/>
                 </div>
               </FormControl>
+              <FormMessage />            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input 
+                    type="password" 
+                    placeholder="Enter your password" 
+                    {...field} 
+                    className="pl-10"
+                  />
+                </div>
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -84,11 +130,50 @@ export function LoginForm() {
           name="phoneNumber"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Phone Number</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input type="tel" placeholder="12345 67890" {...field} className="pl-10"/>
+              <FormLabel>Phone Number</FormLabel>              <FormControl>
+                <div className="relative flex gap-2">
+                  <div className="relative flex-1">
+                    <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input type="tel" placeholder="12345 67890" {...field} className="pl-10"/>
+                  </div>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={async () => {
+                      const usn = form.getValues("usn");
+                      const phoneNumber = form.getValues("phoneNumber");
+                      
+                      if (!usn || !phoneNumber) {
+                        toast({
+                          title: "Error",
+                          description: "Please enter both USN and phone number",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+
+                      const res=await sendotp(phoneNumber);
+
+                      if(res.data.success){
+                        setIsOtpSent(true);
+                        setDisable(false);
+                        toast({
+                          title: "OTP Sent",
+                          description: "Please check your phone for the OTP",
+                        });
+                      }else{
+                        toast({
+                          title: "Error",
+                          description: res.data.message,
+                          variant: "destructive",
+                        });
+                      }
+
+                    }}
+                    disabled={isOtpSent}
+                  >
+                    {isOtpSent ? "OTP Sent" : "Send OTP"}
+                  </Button>
                 </div>
               </FormControl>
               <FormMessage />
@@ -110,8 +195,11 @@ export function LoginForm() {
               <FormMessage />
             </FormItem>
           )}
-        />
-        <Button type="submit" className="w-full" disabled={isSubmitting || disable}>
+        />        <Button 
+          type="submit" 
+          className="w-full" 
+          disabled={isSubmitting || !isOtpSent || disable}
+        >
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : null}

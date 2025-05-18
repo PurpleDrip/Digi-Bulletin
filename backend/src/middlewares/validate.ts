@@ -76,15 +76,7 @@ export const validateRegisterUserInput=(req:Request,res:Response,next:NextFuncti
 }
 
 export const validateLoginUserInput=async (req:Request,res:Response,next:NextFunction)=>{
-    const {usn,password,isPhoneNumberValidated}=req.body;
-
-    if(!isPhoneNumberValidated){
-        res.status(400).json({
-            success:false,
-            message:"First validate your Phone Number."
-        })
-        return;
-    }
+    const {usn,password}=req.body;
 
     try{
         const user=await prisma.user.findUnique({
