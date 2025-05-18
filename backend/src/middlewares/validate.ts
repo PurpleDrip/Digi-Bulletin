@@ -124,7 +124,7 @@ export const validateLoginUserInput=async (req:Request,res:Response,next:NextFun
             semester:user.semester,
             section:user.section,
         }
-        res.locals.token=token;
+        res.locals=token;
         next();
 
     }catch(e){

@@ -22,6 +22,10 @@ import { loginUser, sendotp} from "@/api/auth";
 import { useRouter } from "next/navigation";
 import { passwordSchema } from "@/schema/passwordSchema";
 import { usnSchema } from "@/schema/usnSchema";
+import { useDispatch } from "react-redux";
+import { setUser } from "@/store/userSlice";
+import { setServer } from "@/store/serverSlice";
+import { set } from "date-fns";
 
 const loginFormSchema = z.object({
   usn:usnSchema,
@@ -35,8 +39,10 @@ type LoginFormValues = z.infer<typeof loginFormSchema>;
 export function LoginForm() {
   const { toast } = useToast();
   const router = useRouter();
+  const dispatch = useDispatch();
 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [sendingOtp, setSendingOtp] = React.useState(false);
   const [isOtpSent, setIsOtpSent] = React.useState(false);
   const [disable,setDisable] = React.useState(true);
 
@@ -56,6 +62,8 @@ export function LoginForm() {
     console.log("res",res);
 
     if(res.data.success){
+      dispatch(setUser(res.data.data.user));
+      dispatch(setServer(res.data.data.server));
       toast({
         title: "Login Successful",
         description: "Welcome back!",
@@ -140,6 +148,7 @@ export function LoginForm() {
                     type="button" 
                     variant="outline" 
                     onClick={async () => {
+                      setSendingOtp(true);
                       const usn = form.getValues("usn");
                       const phoneNumber = form.getValues("phoneNumber");
                       
@@ -152,26 +161,33 @@ export function LoginForm() {
                         return;
                       }
 
-                      const res=await sendotp(phoneNumber);
+                      try {
+                        const res = await sendotp(phoneNumber, usn);
 
-                      if(res.data.success){
-                        setIsOtpSent(true);
-                        setDisable(false);
-                        toast({
-                          title: "OTP Sent",
-                          description: "Please check your phone for the OTP",
-                        });
-                      }else{
+                        if (res.data.success) {
+                          setIsOtpSent(true);
+                          setDisable(false);
+                          toast({
+                            title: "OTP Sent",
+                            description: "Please check your phone for the OTP",
+                          });
+                        }
+                      } catch (e: any) {
+                        console.log(e);
                         toast({
                           title: "Error",
-                          description: res.data.message,
+                          description: e?.response?.data?.message || "An error occurred while sending OTP.",
                           variant: "destructive",
                         });
+                      }finally{
+                        setSendingOtp(false);
                       }
-
                     }}
-                    disabled={isOtpSent}
+                    disabled={isOtpSent || sendingOtp}
                   >
+                    {sendingOtp ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : null}
                     {isOtpSent ? "OTP Sent" : "Send OTP"}
                   </Button>
                 </div>

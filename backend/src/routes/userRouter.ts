@@ -3,6 +3,7 @@ import { validateLoginUserInput, validateRegisterUserInput } from "../middleware
 import { approveUser, getPendingAcc, registerUser, updateUser } from "../controllers/userController";
 import { authenticateUser } from "../middlewares/authenticate";
 import { appendCookies, validateOtp } from "../controllers/authController";
+import { getUserInfo } from "../controllers/serverController";
 
 const userRouter = Router();
 
@@ -13,10 +14,7 @@ userRouter.get('/', async (req, res, next)=> {
 
 userRouter.post("/register-user",validateRegisterUserInput,registerUser)
 
-userRouter.post("/login-user",validateOtp,validateLoginUserInput,appendCookies,(req,res:Response):void=> {
-    res.status(200).json({success:true,message:"Successfully logged in."});
-    return;
-})
+userRouter.post("/login-user",validateOtp,validateLoginUserInput,appendCookies,getUserInfo)
 
 userRouter.get("/pending-acc",authenticateUser,getPendingAcc);
 

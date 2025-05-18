@@ -2,17 +2,19 @@ import { NextFunction, Request, Response } from "express";
 import { z } from "zod";
 import jwt from "jsonwebtoken"
 import redis from "../lib/redis";
+import { usnSchema } from "../schemas/zodSchema";
+import prisma from "../lib/prisma";
 
 const TTL=120;      //2 mins
 
 export const sendOtp=async(req:Request,res:Response):Promise<void> =>{
-    const {phoneNumber}=req.body;
+    const {usn,phoneNumber}=req.body;
 
-    const result=z.string().regex(/^\d{10}$/,{
+    const PNresult=z.string().regex(/^\d{10}$/,{
         message:"Phone number must be exactly 10 digits."
     }).safeParse(phoneNumber);
 
-    if(!result.success){
+    if(!PNresult.success){
         res.status(400).json({
             success:false,
             message:"Invalid Phone Number"
@@ -20,9 +22,39 @@ export const sendOtp=async(req:Request,res:Response):Promise<void> =>{
         return;
     }
 
+    const usnResult=usnSchema.safeParse(usn);
+
+    if(!usnResult.success){
+        res.status(400).json({
+            success:false,
+            message:"Invalid USN type."
+        })
+        return;
+    }
+
+    try{
+        const data=await prisma.user.findFirst({
+            where:{usn,phoneNumber}
+        })
+
+        if(!data){
+            res.status(400).json({
+                success:false,
+                message:"This Phone Number is not registered with this USN."
+            })
+            return;
+        }
+    }catch(e){
+        res.status(500).json({
+            success:false,
+            message:"Internal server error."
+        })
+        return;
+    }
+
     const otp = Math.floor(100000 + Math.random() * 900000);
 
-    //Logic to send OTP by SMS
+    //Logic to send OTP by SMS - Last 1 week
 
     await redis.set(`OTP:${phoneNumber}`, otp, { ex: TTL } );
 
@@ -63,7 +95,7 @@ export const validateOtp=async (req:Request,res:Response,next:NextFunction):Prom
     if(!generatedOTP){
         res.status(400).json({
             success:false,
-            message:"OTP is expired, resend the OTP."
+            message:"OTP is expired or the entered Phone Number is invalid."
         })
         return;
     }
@@ -80,7 +112,7 @@ export const validateOtp=async (req:Request,res:Response,next:NextFunction):Prom
 }
 
 export const appendCookies = (req: Request, res: Response,next:NextFunction): void => {
-    const token = res.locals.token;
+    const token = res.locals;
 
     const cookie = jwt.sign(token, process.env.JWT_PASS as string, {
         expiresIn: 24 * 60 * 60, // 1 day in seconds

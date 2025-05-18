@@ -4,10 +4,8 @@ export const checkforcookies= ()=>{
     return axiosInstance.get('/auth/checkforcookies');
 }
 
-export const sendotp=(phoneNumber:string)=>{
-    return axiosInstance.post('/auth/send-otp', {
-        phoneNumber: phoneNumber
-    });
+export const sendotp=(phoneNumber:string,usn:string)=>{
+    return axiosInstance.post('/auth/send-otp', {phoneNumber,usn});
 }
 
 export const loginUser=(data:{
