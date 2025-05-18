@@ -37,7 +37,7 @@ export const createServer = async (req: Request, res: Response): Promise<void> =
       });
       return;
     }    
-    // Create the server
+
     const server = await prisma.server.create({
       data: {
         name: response.data.name,
@@ -136,7 +136,6 @@ export const appendAudience=async(req:Request,res:Response):Promise<void> =>{
         },
     });
     } else if (newGroups && newGroups.length > 0) {
-    // If audience exists and we have new groups to add, append them
     await prisma.audience.update({
         where: { id: server.audience.id },
         data: {

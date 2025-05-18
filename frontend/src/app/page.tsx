@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { AuthTabs } from "@/components/auth/auth-tabs";
-// import { HeroVisual } from "@/components/visuals/hero-visual"; // Original import
 import dynamic from 'next/dynamic';
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -10,7 +9,7 @@ const HeroVisual = dynamic(() =>
   import('@/components/visuals/hero-visual').then(mod => mod.HeroVisual),
   { 
     loading: () => <Skeleton className="w-full h-full max-h-[calc(100vh-4rem)] rounded-lg" />,
-    ssr: false // Optional: if the component is client-side only
+    ssr: false 
   }
 );
 

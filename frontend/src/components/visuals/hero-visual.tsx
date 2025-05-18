@@ -5,7 +5,7 @@ export function HeroVisual() {
   return (
     <Card className="relative h-full w-full overflow-hidden rounded-lg border-0 shadow-none md:border md:shadow-lg">
       <Image
-        src="https://picsum.photos/1200/1200?grayscale&blur=2" // Using picsum.photos as per guidelines
+        src="https://picsum.photos/1200/1200?grayscale&blur=2" 
         alt="Abstract background for DigiConnect"
         layout="fill"
         objectFit="cover"
