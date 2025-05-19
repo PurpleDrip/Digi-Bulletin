@@ -8,7 +8,7 @@ import prisma from "../lib/prisma";
 const TTL=120;      //2 mins
 
 export const sendOtp=async(req:Request,res:Response):Promise<void> =>{
-    const {usn,phoneNumber}=req.body;
+    const {usn,phoneNumber,registerAttempt}=req.body;
 
     const PNresult=z.string().regex(/^\d{10}$/,{
         message:"Phone number must be exactly 10 digits."
@@ -24,7 +24,7 @@ export const sendOtp=async(req:Request,res:Response):Promise<void> =>{
 
     const usnResult=usnSchema.safeParse(usn);
 
-    if(!usnResult.success){
+    if(!usnResult.success && !registerAttempt){
         res.status(400).json({
             success:false,
             message:"Invalid USN type."
@@ -32,24 +32,38 @@ export const sendOtp=async(req:Request,res:Response):Promise<void> =>{
         return;
     }
 
-    try{
-        const data=await prisma.user.findFirst({
-            where:{usn,phoneNumber}
-        })
+    if(!registerAttempt) {
+        try{
+            const data=await prisma.user.findFirst({
+                where:{usn,phoneNumber}
+            })
 
-        if(!data){
-            res.status(400).json({
+            if(!data){
+                res.status(400).json({
+                    success:false,
+                    message:"This Phone Number is not registered with this USN."
+                })
+                return;
+            }
+        }catch(e){
+            res.status(500).json({
                 success:false,
-                message:"This Phone Number is not registered with this USN."
+                message:"Internal server error."
             })
             return;
         }
-    }catch(e){
-        res.status(500).json({
-            success:false,
-            message:"Internal server error."
-        })
-        return;
+    }else{
+        const data=await prisma.user.findFirst({
+            where:{phoneNumber}
+        });
+
+        if(data){
+            res.status(400).json({
+                success:false,
+                message:"This Phone Number is already linked with another Account."
+            })
+            return;
+        }
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000);

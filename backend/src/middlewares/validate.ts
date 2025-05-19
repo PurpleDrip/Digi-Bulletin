@@ -5,18 +5,33 @@ import decodeUSN from "../utils/decodeUSN";
 import getUserType from "../utils/getUserType";
 import { userSchema, usnSchema } from "../schemas/zodSchema";
 import prisma from "../lib/prisma";
+import { z } from "zod";
 
 export const validateRegisterUserInput=(req:Request,res:Response,next:NextFunction):void=>{
 
-    const {usn,name,phoneNumber,password}=req.body;
+    const {usn,name,phoneNumber,password,year,section,semester}=req.body;
 
     const result=usnSchema.safeParse(usn);
-
 
     if (!result.success) {
         res.status(400).json({ 
             message:"Validation Failed",
             error: result.error.flatten() })
+        return;
+    }
+
+    const extraStudentInfo=z.object({
+        year: z.number().optional(),
+        semester: z.number().min(1).max(8).optional(),
+        section:z.enum(["A","B","C","D"],{
+          message:"The entered for field:Section is invalid."
+        }).optional(),
+    }).safeParse(req.body);
+
+    if(!extraStudentInfo.success){
+        res.status(400).json({ 
+            message:"Validation Failed",
+            error: "Invalid Student Information Type."})
         return;
     }
 
@@ -37,7 +52,10 @@ export const validateRegisterUserInput=(req:Request,res:Response,next:NextFuncti
                 ...providedData,
                 type:"STUDENT",
                 admissionYear:admissionYear.toString(),
-                department:usn.slice(5,7)
+                department:usn.slice(5,7),
+                year,
+                semester,
+                section,
             }
             break;
         

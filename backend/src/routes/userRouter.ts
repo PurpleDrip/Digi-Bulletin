@@ -12,7 +12,7 @@ userRouter.get('/', async (req, res, next)=> {
     res.end();
 });
 
-userRouter.post("/register-user",validateRegisterUserInput,registerUser)
+userRouter.post("/register-user",validateOtp,validateRegisterUserInput,registerUser)
 
 userRouter.post("/login-user",validateOtp,validateLoginUserInput,appendCookies,getUserInfo)
 

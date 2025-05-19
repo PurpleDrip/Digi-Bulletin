@@ -65,6 +65,10 @@ export const userSchema=z.object({
     phoneNumber:z.string().regex(/^\d{10}$/,{
         message:"Phone number must be exactly 10 digits."
     }),
+    semester: z.number().min(1).max(8).optional(),
+    section:z.enum(["A","B","C","D"],{
+      message:"The entered for field:Section is invalid."
+    }).optional(),
 
 })
 

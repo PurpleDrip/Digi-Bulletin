@@ -1,18 +1,17 @@
 
 export const USER_TYPES_CONFIG = {
-  UG_STUDENT: { label: "UG Student", description: "Undergraduate student.", needsDepartment: true, needsStudentInfo: true },
-  PG_STUDENT: { label: "PG Student", description: "Postgraduate student.", needsDepartment: true, needsStudentInfo: true },
+  STUDENT: { label: "Student", description: "Undergraduate Student.", needsDepartment: true, needsStudentInfo: true },
 
   ASSISTANT_PROFS: { label: "Assistant Professor", description: "Assistant Professor.", needsDepartment: true, needsStudentInfo: false },
   ASSOCIATE_PROFS: { label: "Associate Professor", description: "Associate Professor.", needsDepartment: true, needsStudentInfo: false },
   PROFS: { label: "Professor", description: "Professor.", needsDepartment: true, needsStudentInfo: false },
 
-  HOD: { label: "Head of Department", description: "Head of a specific department.", needsDepartment: true, needsStudentInfo: false },
+  HOD: { label: "HOD", description: "Head of department.", needsDepartment: true, needsStudentInfo: false },
   REGISTRAR: { label: "Registrar", description: "Administrative head for records.", needsDepartment: false, needsStudentInfo: false }, // Central role, no specific dept in form
   CLERKS: { label: "Clerk", description: "Clerical staff.", needsDepartment: true, needsStudentInfo: false }, // Can be department-specific or central
 
   PRINCIPAL: { label: "Principal", description: "Head of the institution.", needsDepartment: false, needsStudentInfo: false },
-  DEAN: { label: "Dean", description: "Dean of a faculty/school.", needsDepartment: false, needsStudentInfo: false },
+  DEAN: { label: "Dean", description: "Dean of a institution.", needsDepartment: false, needsStudentInfo: false },
   DIRECTOR: { label: "Director", description: "Director of an institute/center.", needsDepartment: false, needsStudentInfo: false },
   LIBRARIAN: { label: "Librarian", description: "Manages library resources.", needsDepartment: false, needsStudentInfo: false },
   LAB_ASSISTANT: { label: "Lab Assistant", description: "Assists in laboratories.", needsDepartment: false, needsStudentInfo: false },
@@ -36,7 +35,7 @@ export const USER_TYPES_ARRAY = Object.entries(USER_TYPES_CONFIG).map(([value, {
 }));
 
 export const doesUserTypeNeedDepartment = (userType?: UserTypeValue): boolean => {
-  if (!userType || !USER_TYPES_CONFIG[userType]) return false; // Default to false if userType is invalid or not provided
+  if (!userType || !USER_TYPES_CONFIG[userType]) return false; 
   return USER_TYPES_CONFIG[userType].needsDepartment;
 };
 
@@ -47,22 +46,23 @@ export const doesUserTypeNeedStudentInfo = (userType?: UserTypeValue): boolean =
 
 export const DEPARTMENT_OPTIONS = [
   { value: "AE", label: "Aerospace Engineering" },
-  { value: "AIDS", label: "Artificial Intelligence and Data Science" },
-  { value: "AIML", label: "Artificial Intelligence and Machine Learning" },
+  { value: "AD", label: "Artificial Intelligence and Data Science" },
+  { value: "AI", label: "Artificial Intelligence and Machine Learning" },
   { value: "BT", label: "Biotechnology" },
   { value: "CH", label: "Chemical Engineering" },
   { value: "CV", label: "Civil Engineering" },
-  { value: "CSE", label: "Computer Science and Engineering" },
-  { value: "CSE_AIML", label: "Computer Science and Engineering (AI-ML)" },
-  { value: "CSE_CS", label: "Computer Science and Engineering (Cyber Security)" },
-  { value: "EEE", label: "Electrical and Electronics Engineering" },
-  { value: "ECE", label: "Electronics & Communication Engineering" },
-  { value: "EIE", label: "Electronics & Instrumentation Engineering" },
-  { value: "ETC", label: "Electronics & Telecommunication Engineering" },
-  { value: "IEM", label: "Industrial Engineering & Management" },
-  { value: "ISE", label: "Information Science & Engineering" },
+  { value: "CS", label: "Computer Science and Engineering" },
+  { value: "CI", label: "Computer Science and Engineering (AI-ML)" },
+  { value: "CY", label: "Computer Science and Engineering (Cyber Security)" },
+  { value: "EE", label: "Electrical and Electronics Engineering" },
+  { value: "EC", label: "Electronics & Communication Engineering" },
+  { value: "EI", label: "Electronics & Instrumentation Engineering" },
+  { value: "ET", label: "Electronics & Telecommunication Engineering" },
+  { value: "IM", label: "Industrial Engineering & Management" },
+  { value: "IS", label: "Information Science & Engineering" },
   { value: "ME", label: "Mechanical Engineering" },
-  { value: "MEE", label: "Medical Electronics Engineering" },
+  { value: "MD", label: "Medical Electronics Engineering" },
+  { value: "AT", label: "Architecture" },
 ] as const;
 
 export type DepartmentValue = typeof DEPARTMENT_OPTIONS[number]['value'];

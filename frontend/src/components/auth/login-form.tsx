@@ -25,7 +25,6 @@ import { usnSchema } from "@/schema/usnSchema";
 import { useDispatch } from "react-redux";
 import { setUser } from "@/store/userSlice";
 import { setServer } from "@/store/serverSlice";
-import { set } from "date-fns";
 
 const loginFormSchema = z.object({
   usn:usnSchema,
@@ -158,6 +157,7 @@ export function LoginForm() {
                           description: "Please enter both USN and phone number",
                           variant: "destructive",
                         });
+                        setSendingOtp(false);
                         return;
                       }
 
@@ -179,9 +179,9 @@ export function LoginForm() {
                           description: e?.response?.data?.message || "An error occurred while sending OTP.",
                           variant: "destructive",
                         });
-                      }finally{
-                        setSendingOtp(false);
                       }
+                      
+                      setSendingOtp(false);
                     }}
                     disabled={isOtpSent || sendingOtp}
                   >

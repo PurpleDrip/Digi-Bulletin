@@ -1,5 +1,5 @@
 import e from "express";
-import { sendOtp, validateOtp } from "../controllers/authController";
+import { sendOtp } from "../controllers/authController";
 import { authenticateUser } from "../middlewares/authenticate";
 import { getUserInfo } from "../controllers/serverController";
 
