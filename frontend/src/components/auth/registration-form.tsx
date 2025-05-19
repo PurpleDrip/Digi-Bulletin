@@ -204,7 +204,7 @@ export function RegistrationForm() {
         year: data.year ? Number(data.year) : 0,
         semester: data.semester ? Number(data.semester) : 0,
         yearOfAdmission: data.yearOfAdmission ?? "",
-        section: data.section ?? "",
+        section: data.section ? data.section.toUpperCase() : "",
       };
 
       const res = await registerUser(payload);
@@ -459,7 +459,7 @@ export function RegistrationForm() {
                   <FormControl>
                     <div className="relative">
                       <ALargeSmall className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input placeholder="e.g., A, B1" {...field} className="pl-10" maxLength={2} />
+                      <Input placeholder="e.g., A, B, C" {...field} className="pl-10" maxLength={2} />
                     </div>
                   </FormControl>
                   <FormMessage />
