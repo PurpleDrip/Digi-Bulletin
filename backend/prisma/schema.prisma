@@ -124,6 +124,8 @@ model Server {
   createdAt       DateTime      @default(now())
   allowAnonymous  Boolean       @default(false)
 
+  status          StatusType    @default(pending)
+
   user            User           @relation("Owner",fields: [ownerId],references: [id])
   ownerId         Int
 
