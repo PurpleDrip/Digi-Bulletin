@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { audienceGroupSchema, serverSchema } from "../schemas/zodSchema";
 import prisma from "../lib/prisma";
 
@@ -197,4 +197,69 @@ export const getUserInfo= async (req:Request,res:Response):Promise<void>=>{
         })
         return;
     }
+}
+
+export const getServers=async (req:Request,res:Response,next:NextFunction)=>{
+  const user = req.body.user;
+
+  try {
+    // Fetch all servers the user has access to, in a flat list
+    const servers = await prisma.server.findMany({
+      where: {
+        status: 'approved',
+        audience: {
+          groups: {
+            some: {
+              OR: [
+                // Direct USN inclusion
+                {
+                  include: true,
+                  usns: { has: user.usn },
+                },
+                // UserType + Department + Year + Semester + Section
+                {
+                  include: true,
+                  userType: user.type,
+                  department: user.department,
+                  year: { has: user.year },
+                  semester: { has: user.semester },
+                  section: { has: user.section },
+                },
+                // UserType + Department
+                {
+                  include: true,
+                  userType: user.type,
+                  department: user.department,
+                },
+                // UserType only (for global servers)
+                {
+                  include: true,
+                  userType: user.type,
+                },
+              ],
+              // Exclude if explicitly excluded by USN
+              NOT: {
+                include: false,
+                usns: { has: user.usn },
+              },
+            },
+          },
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        parentId: true,
+        ownerId: true,
+        audienceId: true,
+        // Add other fields as needed
+      },
+    });
+
+    return res.status(200).json({ servers });
+  } catch (error) {
+    console.error('Error fetching optimized servers:', error);
+    return res.status(500).json({ message: 'Server error while fetching servers' });
+  }
 }
