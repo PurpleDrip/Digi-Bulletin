@@ -10,7 +10,7 @@ datasource db {
 
 enum UserType{
 
-  //Tier-1
+  //Tier-3
   STUDENT                             //1MS-20-CS-001                //999 students per Semester
 
   //Tier-2

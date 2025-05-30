@@ -100,7 +100,5 @@ export const serverSchema=z.object({
   about:z.string().min(3).max(35),
   allowAnonymous:z.boolean(),
   parentId:z.number().optional(),
-  ownerId:z.number(),
   audienceGroups: audienceGroupSchema,
-
 })

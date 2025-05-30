@@ -1,14 +1,13 @@
 import { NextFunction, Request, Response } from "express";
 import { audienceGroupSchema, serverSchema } from "../schemas/zodSchema";
 import prisma from "../lib/prisma";
+import { Prisma } from "@prisma/client";
 
 export const createServer = async (req: Request, res: Response): Promise<void> => {
-  const {ownerId}  = res.locals;
-
+  const { id } = res.locals;
   const response = serverSchema.safeParse(req.body);
 
   if (!response.success) {
-    console.log(response.error?.flatten());
     res.status(400).json({
       success: false,
       message: "Invalid inputs.",
@@ -18,85 +17,118 @@ export const createServer = async (req: Request, res: Response): Promise<void> =
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: ownerId },
-    });
-
+    // Validate owner existence
+    const user = await prisma.user.findFirst({ where: { id} });
     if (!user) {
-    res.status(403).json({
+      res.status(404).json({
         success: false,
-        message: "Invalid Owner ID.",
+        message: "Owner not found.",
       });
       return;
     }
 
+    // Validate audience groups
     if (response.data.audienceGroups.length === 0) {
       res.status(400).json({
         success: false,
         message: "At least one audience group is required.",
       });
       return;
-    }    
+    }
 
-    const server = await prisma.server.create({
-      data: {
-        name: response.data.name,
-        type: response.data.type,
-        about: response.data.about,
-        allowAnonymous: response.data.allowAnonymous,
-        parent: response.data.parentId ? { connect: { id: response.data.parentId } } : undefined,
-        user: { connect: { id: ownerId } },
-        audience: {
-          create: {
-            groups: {
-              create: response.data.audienceGroups.map((group) => ({
-                include: group.include,
-                userType: group.userType,
-                department: group.department ?? null,
-                year: group.year ?? [],
-                semester: group.semester ?? [],
-                section: group.section ?? [],
-                usns: group.usns ?? [],
-              })),
+    // Create server with transaction
+    const server = await prisma.$transaction(async (tx) => {
+
+      if (response.data.parentId) {
+        const parentExists = await tx.server.count({
+          where: { id: response.data.parentId }
+        });
+        
+        if (!parentExists) {
+          throw new Error("Parent server not found");
+        }
+      }
+
+      const createdServer = await tx.server.create({
+        data: {
+          name: response.data.name,
+          type: response.data.type,
+          about: response.data.about,
+          allowAnonymous: response.data.allowAnonymous,
+          parent: response.data.parentId ? { connect: { id: response.data.parentId } } : undefined,
+          user: { connect: { id } },
+          audience: {
+            create: {
+              groups: {
+                create: response.data.audienceGroups.map((group) => ({
+                  include: group.include,
+                  userType: group.userType,
+                  department: group.department ?? null,
+                  year: group.year ?? [],
+                  semester: group.semester ?? [],
+                  section: group.section ?? [],
+                  usns: group.usns ?? [],
+                })),
+              },
             },
           },
         },
-      },
-      include: {
-        audience: {
-          include: {
-            groups: true,
-          },
+        include: {
+          audience: { include: { groups: true } },
+          parent: true,
         },
-        parent: true,
-      },
+      });
+
+      // Additional validation if needed
+      if (response.data.parentId) {
+        const parentExists = await tx.server.count({ where: { id: response.data.parentId } });
+        if (!parentExists) throw new Error("Parent server not found");
+      }
+
+      return createdServer;
     });
 
     res.status(201).json({
       success: true,
       message: "Server created successfully.",
-      server, 
+      server,
     });
+
   } catch (e) {
-    console.error(e);
-    res.status(400).json({
+    console.error("Server creation error:", e);
+    
+    // Handle specific error cases
+    if (e instanceof Prisma.PrismaClientKnownRequestError) {
+      if (e.code === 'P2002') {
+        res.status(409).json({
+          success: false,
+          message: "Server name already exists.",
+        });
+        return;
+      }
+    }
+
+    if (e instanceof Error && e.message === "Parent server not found") {
+      res.status(400).json({
         success: false,
-        message: "Unique constraint violation, possibly a duplicate entry.",
-    });
-    return;
+        message: e.message,
+      });
+      return;
     }
 
     res.status(500).json({
       success: false,
       message: "Internal server error.",
     });
-  
+  }
 };
 
 export const appendAudience=async(req:Request,res:Response):Promise<void> =>{
     const { name, ownerId } = req.body;
 
-    const response=audienceGroupSchema.safeParse(req.body);    if(!response.success){
+    const response=audienceGroupSchema.safeParse(req.body);    
+    
+    if(!response.success){
         res.status(400).json({
             success:false,
             message:"Invalid input."
@@ -199,67 +231,97 @@ export const getUserInfo= async (req:Request,res:Response):Promise<void>=>{
     }
 }
 
-export const getServers=async (req:Request,res:Response,next:NextFunction)=>{
-  const user = req.body.user;
+export const getServers=async (req:Request,res:Response,next:NextFunction):Promise<void>=>{
+  const user = res.locals;
+
+  const tier2Faculty = [
+    'ASSISTANT_PROFR', 'ASSOCIATE_PROFR', 'PROFR', 
+    'HOD', 'CLERKS', 'COORDINATOR'
+  ];
+  
+  const tier1Global = [
+    'PRINCIPAL', 'DEAN', 'DIRECTOR', 'LIBRARIAN',
+    'LAB_ASSISTANT', 'SECURITY_STAFF', 'JANITORIAL_STAFF',
+    'TRANSPORT_STAFF', 'CAFETERIA_STAFF', 'LAB_TECHNICIANS', 'IT_STAFF'
+  ];
+
+  const buildAudienceGroups = () => {
+      if (tier2Faculty.includes(user.type)) {
+        return [{
+          include: true,
+          userType: user.type,
+          department: user.department
+        },
+      {
+        include: true,
+        userType: user.type
+      }];
+      }
+      
+      if (tier1Global.includes(user.type)) {
+        return [{
+          include: true,
+          userType: user.type
+        },
+      {
+        include: true,
+        userType: user.type
+      }];
+      }
+
+      return [{
+        include: true,
+        userType: user.type
+      }];
+    };
+
 
   try {
-    // Fetch all servers the user has access to, in a flat list
-    const servers = await prisma.server.findMany({
-      where: {
-        status: 'approved',
-        audience: {
-          groups: {
+    let servers;
+    if(user.type==="STUDENT"){
+      servers = await prisma.server.findMany({
+        where: {
+          status: 'approved',
+          audience: {
+            groups: {
             some: {
+              include: true,
+              userType: 'STUDENT',
+              department: user.department,
               OR: [
-                // Direct USN inclusion
-                {
-                  include: true,
-                  usns: { has: user.usn },
-                },
-                // UserType + Department + Year + Semester + Section
-                {
-                  include: true,
-                  userType: user.type,
-                  department: user.department,
-                  year: { has: user.year },
-                  semester: { has: user.semester },
-                  section: { has: user.section },
-                },
-                // UserType + Department
-                {
-                  include: true,
-                  userType: user.type,
-                  department: user.department,
-                },
-                // UserType only (for global servers)
-                {
-                  include: true,
-                  userType: user.type,
-                },
-              ],
-              // Exclude if explicitly excluded by USN
-              NOT: {
-                include: false,
-                usns: { has: user.usn },
-              },
+                { year: { has: user.year } },
+                { semester: { has: user.semester } },
+                { section: { has: user.section } }
+              ]
+            }
             },
           },
         },
-      },
-      select: {
-        id: true,
-        name: true,
-        type: true,
-        parentId: true,
-        ownerId: true,
-        audienceId: true,
-        // Add other fields as needed
-      },
     });
-
-    return res.status(200).json({ servers });
+    }else{
+        servers = await prisma.server.findMany({
+          where: {
+            status: 'approved',
+            audience: {
+              groups: {
+                some: {
+                  OR: buildAudienceGroups(),
+                  NOT: {
+                    include: false,
+                    usns: { has: user.usn },
+                  },
+                },
+              },
+            },
+          },
+    
+        });
+    }
+    res.status(200).json({ servers });
+    return;
   } catch (error) {
     console.error('Error fetching optimized servers:', error);
-    return res.status(500).json({ message: 'Server error while fetching servers' });
+    res.status(500).json({ message: 'Server error while fetching servers' });
+    return;
   }
 }
