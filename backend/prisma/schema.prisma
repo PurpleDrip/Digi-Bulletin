@@ -8,8 +8,7 @@ datasource db {
   directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
-enum UserType{
-
+enum UserType {
   //Tier-3
   STUDENT                             //1MS-20-CS-001                //999 students per Semester
 
@@ -42,6 +41,7 @@ enum UserType{
 }
 
 enum DptType { 
+  ALL
   AE              //Aerospace Engineering
   AD              //Artificial Intelligence and Data Science
   AI              //Artificial Intelligence and Machine Learning
@@ -132,9 +132,11 @@ model Server {
   parent          Server?       @relation("ServerHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
   parentId        Int?
   childServers    Server[]      @relation("ServerHierarchy")
+
+  isPublic        Boolean       @default(false)
   
-  audience        Audience      @relation(fields: [audienceId], references: [id])
-  audienceId      Int
+  audience        Audience?      @relation(fields: [audienceId], references: [id]) 
+  audienceId      Int?
 }
 
 model Audience {
@@ -152,9 +154,9 @@ model AudienceGroup {
   audienceId   Int
 
   include      Boolean          
-  userType     UserType         
+  userType     UserType    
 
-  department   DptType?         
+  department   DptType[]
   year         Int[]           
   semester     Int[]           
   section      SectionType[]   

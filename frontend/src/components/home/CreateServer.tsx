@@ -11,10 +11,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { ScrollArea } from "../ui/scroll-area";
+import { UserTypeScroll } from "./UserTypeScroll";
+import { Checkbox } from "../ui/checkbox";
+import { DepartmentTypeScroll } from "./DepartmentTypeScroll";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { createServer } from "@/api/server";
+import { useToast } from "@/hooks/use-toast";
 
 // Example enums (replace with your actual enums or fetch from API)
 const SERVER_TYPES = [
-  "ALL", "CLASSROOM", "GENERAL", "DEPARTMENTAL", "FACULTY", "ADMIN", "STUDENT_BODY"
+  "SEMINAR","EVENT","GENERAL",
+  "ANNOUNCEMENT", "CLASSROOM", "DISCUSSION", "CLUB", "DEPARTMENTAL",
+  "STUDENT_BODY", "SUPPORT", "RESEARCH", "WORKSHOP", "EXAM", "ALUMNI", "FACULTY", "ADMINISTRATION"
 ] as const;
 const USER_TYPES = [
   "ALL", "STUDENT",
@@ -23,10 +31,6 @@ const USER_TYPES = [
   "JANITORIAL_STAFF", "TRANSPORT_STAFF", "CAFETERIA_STAFF", "LAB_TECHNICIANS", "IT_STAFF",
   "GUEST", "ALUMINI", "ADMIN"
 ] as const;
-const DEPARTMENTS = ["ALL", "CS", "ME", "EC", "CE"] as const;
-const YEARS = ["ALL", 1, 2, 3, 4, 5] as const;
-const SEMESTERS = ["ALL", 1, 2, 3, 4, 5, 6, 7, 8] as const;
-const SECTIONS = ["ALL", "A", "B", "C", "D"] as const;
 
 // Tier 2 and Tier 1 user types
 const TIER2 = [
@@ -40,7 +44,7 @@ const TIER1 = [
 const defaultAudienceGroup = {
   include: true,
   userType: "ALL",
-  department: "ALL",
+  department: ["ALL"],
   year: ["ALL"],
   semester: ["ALL"],
   section: ["ALL"],
@@ -58,12 +62,14 @@ export default function CreateServer({
 }) {
   const [formData, setFormData] = useState({
     serverName: "",
-    serverType: "CLASSROOM",
+    serverType: "",
     aboutServer: "",
     parentId: "",
     allowAnonymous: false,
     audienceGroups: [{ ...defaultAudienceGroup }],
   });
+
+  const { toast } = useToast();
 
   // Handle input changes for main form
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -73,6 +79,15 @@ export default function CreateServer({
       [id]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value
     }));
   };
+
+  const [tempAudienceInputs, setTempAudienceInputs] = useState(
+    formData.audienceGroups.map(group => ({
+      year: group.year.join(","),
+      semester: group.semester.join(","),
+      section: group.section.join(","),
+      usns: group.usns.join(","),
+    }))
+  );
 
   // Handle audience group field change
   const handleAudienceGroupChange = (index: number, field: string, value: any) => {
@@ -115,7 +130,7 @@ export default function CreateServer({
     return [ "usns"]; 
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Prepare final data (convert parentId to number or null)
     const payload = {
@@ -126,6 +141,7 @@ export default function CreateServer({
       allowAnonymous: formData.allowAnonymous,
       audienceGroups: formData.audienceGroups.map(group => ({
         ...group,
+        department:Array.isArray(group.department) ? group.department : [group.department],
         year: group.year.includes("ALL") ? ["ALL"] : group.year.filter(Boolean),
         semester: group.semester.includes("ALL") ? ["ALL"] : group.semester.filter(Boolean),
         section: group.section.includes("ALL") ? ["ALL"] : group.section.filter(Boolean),
@@ -133,8 +149,26 @@ export default function CreateServer({
       })),
     };
     console.log("Form submitted with data:", payload);
-    // TODO: POST to your API here
-    setCreateServerOpen(false);
+    
+
+    try{
+      const res=await createServer(payload);
+      console.log("Server created successfully:", res);
+
+      toast({
+        title: "Server Created",
+        description: "Your server has been created successfully."
+      });
+
+      setCreateServerOpen(false);
+    }catch(err){
+      console.log("Error creating server:", err);
+      toast({
+        title: "Error",
+        description: "Failed to create server. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -147,137 +181,193 @@ export default function CreateServer({
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="h-[80vh] pr-4">
-        <form onSubmit={handleSubmit} >
-          <div className="grid gap-4 py-2">
+        <form onSubmit={handleSubmit}>
+          <div className="flex flex-col gap-4 items-start mt-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="serverName" className="text-right">Server Name</Label>
               <Input id="serverName" value={formData.serverName} onChange={handleChange} className="col-span-3" required />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="serverType" className="text-right">Server Type</Label>
-              <select id="serverType" value={formData.serverType} onChange={handleChange} className="col-span-3 border rounded px-2 py-1">
-                {SERVER_TYPES.map((type) => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
+              <Select
+                value={formData.serverType}
+                onValueChange={(value) =>
+                  setFormData((prev) => ({ ...prev, serverType: value }))
+                }
+              >
+                <SelectTrigger id="serverType" className="col-span-3">
+                  <SelectValue placeholder="Select server type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SERVER_TYPES.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="aboutServer" className="text-right">About Server</Label>
               <Input id="aboutServer" value={formData.aboutServer} onChange={handleChange} className="col-span-3" required />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="parentId" className="text-right">Parent Server</Label>
-              <select
-                id="parentId"
+              <Label htmlFor="parentId">Parent Server</Label>
+              <Select
                 value={formData.parentId}
-                onChange={handleChange}
-                className="col-span-3 border rounded px-2 py-1"
+                onValueChange={(value) =>
+                  setFormData((prev) => ({ ...prev, parentId: value }))
+                }
               >
-                <option value="">None</option>
-                {ownedServers.map((srv) => (
-                  <option key={srv.id} value={srv.id}>{srv.name}</option>
-                ))}
-              </select>
+                <SelectTrigger id="parentId" className="col-span-3">
+                  <SelectValue placeholder="None" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="undefined">None</SelectItem>
+                  {ownedServers.map((srv) => (
+                    <SelectItem key={srv.id} value={srv.id.toString()}>
+                      {srv.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="allowAnonymous" className="text-right">Allow Anonymous</Label>
-              <input
+            <div className="flex items-center mb-2 gap-2">
+              <Checkbox
                 id="allowAnonymous"
-                type="checkbox"
                 checked={formData.allowAnonymous}
-                onChange={handleChange}
-                className="col-span-3"
+                onCheckedChange={(checked) => setFormData(prev => ({
+                  ...prev,
+                  allowAnonymous: checked === true
+                }))}
               />
+              <Label htmlFor="allowAnonymous">Allow Anonymous Messaging</Label>
             </div>
           </div>
 
           <div className="py-2">
-            <Label className="font-semibold">Audience Groups</Label>
+            <Label className="text-md text-red-500">Audience Groups</Label>
             {formData.audienceGroups.map((group, idx) => {
               const fields = getAudienceFields(group.userType);
               return (
                 <div key={idx} className="border rounded p-3 my-2">
-                  <div className="flex justify-between mb-2">
-                    <span className="font-medium">Group {idx + 1}</span>
+                  <div className="flex flex-col mb-2 ">
+                    <span className="font-medium text-left">Group {idx + 1}</span>
                     {formData.audienceGroups.length > 1 && (
-                      <Button type="button" variant="destructive" size="sm" onClick={() => removeAudienceGroup(idx)}>
+                      <Button className="w-20 ml-auto" type="button" variant="destructive" size="sm" onClick={() => removeAudienceGroup(idx)}>
                         Remove
                       </Button>
                     )}
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <Label>User Type</Label>
-                      <select
-                        value={group.userType}
-                        onChange={e => handleAudienceGroupChange(idx, "userType", e.target.value)}
-                        className="w-full border rounded px-2 py-1"
-                      >
-                        {USER_TYPES.map((ut) => (
-                          <option key={ut} value={ut}>{ut}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Label>Include?</Label>
-                      <input
-                        type="checkbox"
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center mb-2 gap-2"> 
+                      <Checkbox
+                        id={`include-${idx}`}
                         checked={group.include}
-                        onChange={e => handleAudienceGroupChange(idx, "include", e.target.checked)}
+                        onCheckedChange={(checked) =>
+                          handleAudienceGroupChange(idx, "include", checked === true)
+                        }
                       />
+                      <Label htmlFor={`include-${idx}`}>Include</Label>
                     </div>
-                    {fields.includes("department") && (
-                      <div>
-                        <Label>Department</Label>
-                        <select
-                          value={group.department}
-                          onChange={e => handleAudienceGroupChange(idx, "department", e.target.value)}
-                          className="w-full border rounded px-2 py-1"
-                        >
-                          {DEPARTMENTS.map((d) => (
-                            <option key={d} value={d}>{d}</option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                    {fields.includes("year") && (
-                      <div>
-                        <Label>Year (comma separated)</Label>
+
+                    <UserTypeScroll
+                      index={idx}
+                      value={group.userType}
+                      onChange={(index, value) => handleAudienceGroupChange(index, "userType", value)}
+                    />
+
+                    <div className="flex items-center justify-between px-4 py-2 gap-4">
+                      <div className="w-1/2 flex flex-col gap-2 flex-shrink-0 flex-grow-0">
+                        <Label>USNs (comma separated)</Label>
                         <Input
-                          value={group.year.join(",")}
-                          onChange={e => handleArrayFieldChange(idx, "year", e.target.value)}
-                          placeholder="e.g. ALL,1,2,3,4"
+                          value={tempAudienceInputs[idx].usns}
+                          onChange={e => {
+                            const value = e.target.value;
+                            setTempAudienceInputs(inputs =>
+                              inputs.map((input, i) =>
+                                i === idx ? { ...input, usns: value } : input
+                              )
+                            );
+                          }}
+                          onBlur={e => {
+                            const arr = e.target.value.split(",").map(v => v.trim()).filter(Boolean);
+                            handleAudienceGroupChange(idx, "usns", arr);
+                          }}
+                          placeholder="e.g. 1MS20CS001,1MS20CS002"
                         />
                       </div>
+                      {fields.includes("department") && (
+                      <DepartmentTypeScroll
+                        index={idx}
+                        value={Array.isArray(group.department) ? group.department : [group.department]}
+                        onChange={(index, value) => handleAudienceGroupChange(index, "department", value)}
+                      />)}
+                    </div>
+
+                    {fields.includes("year") && (
+                      <>
+                    <Label>Year (comma separated)</Label>
+                    <Input
+                      value={tempAudienceInputs[idx].year}
+                      onChange={e => {
+                        const value = e.target.value;
+                        setTempAudienceInputs(inputs =>
+                          inputs.map((input, i) =>
+                            i === idx ? { ...input, year: value } : input
+                          )
+                        );
+                      }}
+                      onBlur={e => {
+                        const arr = e.target.value.split(",").map(v => v.trim()).filter(Boolean);
+                        handleAudienceGroupChange(idx, "year", arr);
+                      }}
+                      placeholder="e.g. ALL,1,2,3,4"
+                    />
+                    </>
                     )}
                     {fields.includes("semester") && (
-                      <div>
-                        <Label>Semester (comma separated)</Label>
-                        <Input
-                          value={group.semester.join(",")}
-                          onChange={e => handleArrayFieldChange(idx, "semester", e.target.value)}
-                          placeholder="e.g. ALL,1,2,6,7,8"
-                        />
-                      </div>
+                    <>
+                    <Label>Semester (comma separated)</Label>
+                    <Input
+                      value={tempAudienceInputs[idx].semester}
+                      onChange={e => {
+                        const value = e.target.value;
+                        setTempAudienceInputs(inputs =>
+                          inputs.map((input, i) =>
+                            i === idx ? { ...input, semester: value } : input
+                          )
+                        );
+                      }}
+                      onBlur={e => {
+                        const arr = e.target.value.split(",").map(v => v.trim()).filter(Boolean);
+                        handleAudienceGroupChange(idx, "semester", arr.map(v => v === "ALL" ? "ALL" : Number(v)));
+                      }}
+                      placeholder="e.g. ALL,1,2,6,7,8"
+                    />
+                    </>
                     )}
                     {fields.includes("section") && (
-                      <div>
-                        <Label>Section (comma separated)</Label>
-                        <Input
-                          value={group.section.join(",")}
-                          onChange={e => handleArrayFieldChange(idx, "section", e.target.value)}
-                          placeholder="e.g. ALL,A,B,C"
-                        />
-                      </div>
+                    <>
+                    <Label>Section (comma separated)</Label>
+                    <Input
+                      value={tempAudienceInputs[idx].section}
+                      onChange={e => {
+                        const value = e.target.value;
+                        setTempAudienceInputs(inputs =>
+                          inputs.map((input, i) =>
+                            i === idx ? { ...input, section: value } : input
+                          )
+                        );
+                      }}
+                      onBlur={e => {
+                        const arr = e.target.value.split(",").map(v => v.trim()).filter(Boolean);
+                        handleAudienceGroupChange(idx, "section", arr);
+                      }}
+                      placeholder="e.g. ALL,A,B,C"
+                    />
+                    </>
                     )}
-                    <div>
-                      <Label>USNs (comma separated)</Label>
-                      <Input
-                        value={group.usns.join(",")}
-                        onChange={e => handleArrayFieldChange(idx, "usns", e.target.value)}
-                        placeholder="e.g. 1MS-20-CS-001,1MS-20-CS-002"
-                      />
-                    </div>
                   </div>
                 </div>
               );

@@ -1,5 +1,5 @@
 import {  Router } from "express";
-import { appendAudience, createServer, getServers } from "../controllers/serverController";
+import { createServer, getOwnedServers, getServers } from "../controllers/serverController";
 import { authenticateOwner, authenticateUser } from "../middlewares/authenticate";
 
 const serverRouter = Router();
@@ -11,8 +11,10 @@ serverRouter.get('/', function (req, res, next) {
 
 serverRouter.post("/create-server",authenticateUser,createServer)
 
-serverRouter.post("/add-audience",authenticateUser, authenticateOwner, appendAudience)
+// serverRouter.post("/add-audience",authenticateUser, authenticateOwner, appendAudience)
 
 serverRouter.get("/get-server",authenticateUser,getServers)
+
+serverRouter.get("/get-owned-servers",authenticateUser,getOwnedServers);
 
 export default serverRouter;

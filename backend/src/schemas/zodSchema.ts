@@ -75,17 +75,17 @@ export const userSchema=z.object({
 export const audienceGroupSchema = z.array(z.object({
   include:z.boolean(),
   userType: z.enum([
-    "STUDENT","ASSISTANT_PROFR","ASSOCIATE_PROFR","PROFR","HOD","REGISTRAR","CLERKS",
+    "ALL","STUDENT","ASSISTANT_PROFR","ASSOCIATE_PROFR","PROFR","HOD","REGISTRAR","CLERKS",
     "COORDINATOR","PRINCIPAL","DEAN","DIRECTOR","LIBRARIAN","LAB_ASSISTANT",
     "SECURITY_STAFF","JANITORIAL_STAFF","TRANSPORT_STAFF","CAFETERIA_STAFF",
     "LAB_TECHNICIANS","IT_STAFF","GUEST","ALUMINI","ADMIN"
   ], {
     message: "This TYPE of user was not found or is invalid."
   }),
-  department: z.enum([
-    "AE","AD","AI","BT","CH","CV","CS","CI","CY","EE",
+  department: z.array(z.enum([
+    "ALL","AE","AD","AI","BT","CH","CV","CS","CI","CY","EE",
     "EC","EI","ET","IM","IS","ME","MD","AT"
-  ]).optional(),
+  ])).optional(),
   year: z.array(z.number()).optional(),
   semester: z.array(z.number().min(1).max(8)).optional(),
   section:z.array(z.enum(["A","B","C","D"],{

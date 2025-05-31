@@ -51,7 +51,6 @@ export function HomeSidebar({
                 {type.replace("_", " ")}
               </h3>
               {group
-                .filter((srv) => !ownedServers.some((o) => o.id === srv.id))
                 .map((srv) => (
                   <TreeNode
                     key={srv.id}

@@ -22,17 +22,18 @@ export default function HomeLayout() {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Get owned servers (replace with actual user ID logic)
-  const userId = 1; // Replace with real user ID
-  const ownedServers = useMemo(
-    () => servers.filter((s: any) => s.ownerId === userId),
-    [servers, userId]
-  );
+  const {data:ownedServersData=[]}=useQuery({
+    queryKey: ["ownedServers"],
+    queryFn: async () => {
+      const res = await axiosInstance.get("/server/get-owned-servers");
+      console.log("Owned Servers Data:", res.data);
+      return res.data.data;
+    },
+    staleTime: 5 * 60 * 1000,
+  })
 
-  // Find the selected server object to pass details
   const selectedServer = useMemo(() => {
     if (!selectedServerId) return null;
-    // Flatten servers to find selected server
     const flatten = (nodes: any[]): any[] => {
       let result: any[] = [];
       nodes.forEach((node) => {
@@ -82,7 +83,7 @@ export default function HomeLayout() {
           onSelectServer={handleSelectServer}
           onEditServer={handleEditServer}
           onCreateServer={handleCreateServer}
-          ownedServers={ownedServers}
+          ownedServers={ownedServersData}
         />
         <div className="flex flex-1 flex-col overflow-hidden">
           <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 bg-muted/40">
@@ -104,7 +105,7 @@ export default function HomeLayout() {
           </main>
         </div>
       </div>
-      <CreateServer createServerOpen={createServerOpen} setCreateServerOpen={setcreateServerOpen} ownedServers={ownedServers} />
+      <CreateServer createServerOpen={createServerOpen} setCreateServerOpen={setcreateServerOpen} ownedServers={ownedServersData} />
     </>
   );
 }
