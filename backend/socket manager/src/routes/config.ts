@@ -1,26 +1,29 @@
-import { Socket } from "socket.io";
+import { Server, Socket } from "socket.io";
 
-export const configRoutes = (socket: Socket, io: any): void => {
-    socket.on("connect",(data:connectMessage)=>{
+type JoinServerMessage = {
+  serverId: number;
+  senderId: number;
+};
+
+export const configRoutes = (socket: Socket, io: Server): void => {
+    socket.on("join_server", (data: JoinServerMessage) => { 
         try {
             if (!data.serverId || !data.senderId) {
                 socket.emit('error', 'Invalid serverId or userId');
                 return;
             }
             
-            // Join the server room
             socket.join(data.serverId.toString());
-            socket.data.userId = data.senderId; // Store.senderId in socket data
+            socket.data.userId = data.senderId;
             console.log(`🟢 ${socket.id} joined server ${data.serverId}`);
             
-            // Notify others
-            socket.to(data.serverId.toString()).emit('user-joined', {
-                senderId: data.senderId,
+            io.to(data.serverId.toString()).emit('user_joined', { 
+                userId: data.senderId,
                 timestamp: new Date()
             });
         } catch (error) {
-            console.error('Error connecting to server:', error);
-            socket.emit('error', 'Failed to connect to server');
+            console.error('Join server error:', error);
+            socket.emit('error', 'Failed to join server');
         }
     });
 }

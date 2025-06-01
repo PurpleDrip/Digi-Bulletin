@@ -23,8 +23,8 @@ const io = new Server(server, {
 io.on('connection', (socket: Socket) => {
     console.log('🔌 New client connected',socket.id);
 
-    // configRoutes(socket,io);
-    // chatRoutes(socket,io);
+    configRoutes(socket,io);
+    chatRoutes(socket,io);
 
     socket.on('disconnect', () => {
         console.log('❌ Client disconnected',socket.id);

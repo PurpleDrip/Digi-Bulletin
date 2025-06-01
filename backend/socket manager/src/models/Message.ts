@@ -3,7 +3,6 @@ import mongoose, { Schema, Document } from "mongoose";
 // 1. Use string enums for better readability and storage
 enum TitleType {
   QUESTION = "QUESTION",
-  ANSWER = "ANSWER",
   ALERT = "ALERT",
   INFO = "INFO",
   WARNING = "WARNING",
@@ -136,7 +135,6 @@ export interface IReaction {
   userId: number;
   createdAt: Date;
 }
-
 export interface IMessage {
   serverId: number;
   senderId: number;
