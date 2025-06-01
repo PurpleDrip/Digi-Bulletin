@@ -8,7 +8,7 @@ import { Separator } from "../ui/separator";
 type MessageType = {
   _id: string;
   serverId: number;
-  senderUSN: number;
+  senderUSN: String;
   senderName?: string;
   title?: string;
   content: string;
@@ -127,7 +127,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full border rounded-3xl border-gray-800 p-2">
+    <div className="flex flex-col h-full border rounded-3xl border-zinc-700 p-2">
       {/* Server Info */}
       <div className="border rounded-xl px-4 py-2 bg-red-500/50 flex items-center justify-between border-red-800">
         <section>
@@ -150,7 +150,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         {messages.map((msg) => (
           <div
             key={msg._id}
-            className="mb-8 flex flex-col items-start relative min-w-max max-w-[30vw] bg-zinc-800/50 px-4 py-2 rounded-3xl border border-zinc-700"
+            className={`mb-8 flex flex-col items-start relative min-w-max max-w-[30vw] bg-zinc-800/50 px-4 py-2 rounded-3xl border
+              ${msg.senderUSN===userUSN ? "border-red-700":"border-zinc-700"}`}
           >
             {/* First line: User name or ID */}
               <div className="flex items-center justify-between w-full">
@@ -165,7 +166,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                   </span>
                 )}
                 <div className="ml-auto">
-                  <h1 className="text-xs text-zinc-500">Id - {msg._id}</h1>
+                  <h1 className="text-xs text-zinc-500">Msg Id - {msg._id}</h1>
                 </div>
               </div>
             {/* Second line: Title */}
