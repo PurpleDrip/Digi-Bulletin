@@ -3,7 +3,7 @@ import Message, { MessageDocument } from "../models/Message";
 
 type MessageType={
     serverId:number,
-    senderId:number,
+    senderUSN:String,
 
     type:MessageDocument['type'],
     title?: MessageDocument['title'],
@@ -27,7 +27,10 @@ export const chatRoutes = (socket: Socket, io: Server): void => {
     socket.on("message",async (data:MessageType)=>{
         console.log(`🟢 ${socket.id} sent a message to server ${data.serverId}`);
         try {
-            const message=await Message.create(data);
+            const message=await Message.create({
+                ...data,
+                title: data.title || undefined,
+            });
 
             io.to(data.serverId.toString()).emit('new_message',message );
         } catch (error) {
@@ -41,12 +44,12 @@ export const chatRoutes = (socket: Socket, io: Server): void => {
         try{
             await Message.updateOne(
                 { _id: data.messageId },
-                { $pull: { reactions: { userId:socket.data.userId } } }
+                { $pull: { reactions: { userUSN:socket.data.userUSN } } }
             );
             // Add the new reaction
             const result = await Message.updateOne(
                 { _id: data.messageId },
-                { $push: { reactions: { type:data.type, userId:socket.data.userId } } }
+                { $push: { reactions: { type:data.type, userUSN:socket.data.userUSN } } }
             );
 
             if (result.modifiedCount > 0) {

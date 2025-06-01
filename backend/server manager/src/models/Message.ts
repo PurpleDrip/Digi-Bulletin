@@ -1,90 +1,165 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema, Document } from "mongoose";
 
+// 1. Use string enums for better readability and storage
+enum TitleType {
+  QUESTION = "QUESTION",
+  ALERT = "ALERT",
+  INFO = "INFO",
+  WARNING = "WARNING",
+}
+
+enum MessageType {
+  TEXT = "TEXT",
+  IMAGE = "IMAGE",
+  VIDEO = "VIDEO",
+  POLL = "POLL",
+  FILE = "FILE",
+  SUMMARY = "SUMMARY",
+}
+
+enum ReactionType {
+  UPVOTE = "UPVOTE",
+  DOWNVOTE = "DOWNVOTE",
+}
+
+// 2. Define sub-schemas first
 const PollOptionSchema = new Schema({
   option: { type: String, required: true },
   votes: [{
-    userId: { type: Number, required: true },
+    userUSN: { type: String, required: true }, 
     votedAt: { type: Date, default: Date.now }
   }]
 });
 
 const ReactionSchema = new Schema({
-  type: { type: String, enum: ['UPVOTE', 'DOWNVOTE'], required: true },
-  userId: { type: Number, required: true },
+  type: { type: String, enum: Object.values(ReactionType), required: true },
+  userUSN: { type: String, required: true },
   createdAt: { type: Date, default: Date.now }
 });
 
+// 3. Main Message Schema
 const MessageSchema = new Schema({
-  serverId: { type: Number, required: true, index: true }, // References PostgreSQL Server.id
-  senderId: { type: Number, required: true, index: true }, // References PostgreSQL User.id
+  serverId: { type: Number, required: true, index: true }, 
+  senderUSN: { type: String, required: true, index: true }, 
   
   type: { 
     type: String, 
-    enum: ['TEXT', 'IMAGE', 'VIDEO', 'POLL', 'FILE', 'SUMMARY'], 
-    default: 'TEXT' 
+    enum: Object.values(MessageType),
+    required: true,
+    default: MessageType.TEXT
+  },
+
+  title: { 
+    type: String, 
+    enum: Object.values(TitleType),
+    required: false 
+  },
+
+  // 4. Handle different content types properly
+  content: { 
+    type: String,
+    required: function(this: any) {
+      return this.type === 'TEXT' || this.type === 'SUMMARY';
+    } 
   },
   
-  content: { type: String },
-  mediaUrls: [{ type: String }],
-  pollOptions: [PollOptionSchema],
+  mediaUrls: {
+    type: [String],
+    required: function(this: any) {
+      return [
+        MessageType.IMAGE, 
+        MessageType.VIDEO, 
+        MessageType.FILE
+      ].includes(this.type);
+    }
+  },
+
+  pollOptions: { 
+    type: [PollOptionSchema],
+    validate: {
+      validator: function(this: any, value: any) {
+        if (this.type === MessageType.POLL) {
+          return Array.isArray(value) && value.length > 0;
+        }
+        return true;
+      },
+      message: 'pollOptions is required when type is POLL'
+    }
+  },
   
   replyTo: {
     messageId: { type: Schema.Types.ObjectId, ref: 'Message' },
-    senderId: { type: Number }
+    senderId: { type: Number }, // Should match senderId type
   },
   
-  reactions: [ReactionSchema],
-  isAnonymous: { type: Boolean, default: false },
-  
-  createdAt: { type: Date, default: Date.now, index: true },
-  updatedAt: { type: Date }
+  reactions: {
+    type: [ReactionSchema],
+    default: []
+  },
+
+  isAnonymous: {
+    type: Boolean,
+    default: false,
+    required: true
+  }
+
+}, { 
+  timestamps: true, // 5. Auto-manage createdAt/updatedAt
+  toJSON: { virtuals: true } // Include virtuals in JSON output
 });
 
-// Compound indexes for better query performance
+// 6. Compound indexes
 MessageSchema.index({ serverId: 1, createdAt: -1 });
 MessageSchema.index({ senderId: 1, createdAt: -1 });
 MessageSchema.index({ 'replyTo.messageId': 1 });
 
-// Virtual for getting reaction counts
+// 7. Virtual for reaction counts
 MessageSchema.virtual('reactionCounts').get(function() {
-  const counts = {
-    UPVOTE: 0,
-    DOWNVOTE: 0
-  };
-  
-  this.reactions.forEach(reaction => {
-    counts[reaction.type]++;
-  });
-  
+  const counts = { UPVOTE: 0, DOWNVOTE: 0 };
+  if (Array.isArray(this.reactions)) {
+    for (const r of this.reactions) {
+      if (r.type === "UPVOTE") counts.UPVOTE++;
+      if (r.type === "DOWNVOTE") counts.DOWNVOTE++;
+    }
+  }
   return counts;
 });
 
+// 8. TypeScript interfaces
+export interface IPollOption {
+  option: string;
+  votes: Array<{
+    userUSN: String;
+    votedAt: Date;
+  }>;
+}
+
+export interface IReaction {
+  type: ReactionType;
+  userUSN: String;
+  createdAt: Date;
+}
 export interface IMessage {
   serverId: number;
-  senderId: number;
-  type: 'TEXT' | 'IMAGE' | 'VIDEO' | 'POLL' | 'FILE' | 'SUMMARY';
+  senderUSN: String;
+  type: MessageType;
+  title?: TitleType;
   content?: string;
   mediaUrls?: string[];
-  pollOptions?: {
-    option: string;
-    votes: { userId: number; votedAt: Date }[];
-  }[];
+  pollOptions?: IPollOption[];
   replyTo?: {
     messageId: mongoose.Types.ObjectId;
-    senderId: number;
+    senderUSN: number;
   };
-  reactions: {
-    type: 'UPVOTE' | 'DOWNVOTE';
-    userId: number;
-    createdAt: Date;
-  }[];
+  reactions: IReaction[];
   isAnonymous: boolean;
   createdAt: Date;
-  updatedAt?: Date;
+  updatedAt: Date;
 }
 
-export interface MessageDocument extends IMessage, mongoose.Document {
-  reactionCounts: { UPVOTE: number; DOWNVOTE: number };
+export interface MessageDocument extends IMessage, Document {
+  reactionCounts: Record<ReactionType, number>;
 }
 
+// 9. Model export
 export default mongoose.model<MessageDocument>('Message', MessageSchema);

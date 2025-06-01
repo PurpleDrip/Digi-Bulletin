@@ -26,21 +26,21 @@ enum ReactionType {
 const PollOptionSchema = new Schema({
   option: { type: String, required: true },
   votes: [{
-    userId: { type: Number, required: true }, // Should ideally be ObjectId if using MongoDB references
+    userUSN: { type: String, required: true }, 
     votedAt: { type: Date, default: Date.now }
   }]
 });
 
 const ReactionSchema = new Schema({
   type: { type: String, enum: Object.values(ReactionType), required: true },
-  userId: { type: Number, required: true },
+  userUSN: { type: String, required: true },
   createdAt: { type: Date, default: Date.now }
 });
 
 // 3. Main Message Schema
 const MessageSchema = new Schema({
   serverId: { type: Number, required: true, index: true }, 
-  senderId: { type: Number, required: true, index: true }, 
+  senderUSN: { type: String, required: true, index: true }, 
   
   type: { 
     type: String, 
@@ -125,19 +125,19 @@ MessageSchema.virtual('reactionCounts').get(function() {
 export interface IPollOption {
   option: string;
   votes: Array<{
-    userId: number;
+    userUSN: String;
     votedAt: Date;
   }>;
 }
 
 export interface IReaction {
   type: ReactionType;
-  userId: number;
+  userUSN: String;
   createdAt: Date;
 }
 export interface IMessage {
   serverId: number;
-  senderId: number;
+  senderUSN: String;
   type: MessageType;
   title?: TitleType;
   content?: string;
@@ -145,7 +145,7 @@ export interface IMessage {
   pollOptions?: IPollOption[];
   replyTo?: {
     messageId: mongoose.Types.ObjectId;
-    senderId: number;
+    senderUSN: number;
   };
   reactions: IReaction[];
   isAnonymous: boolean;

@@ -43,7 +43,7 @@ app.get('/api/health', (req: Request, res: Response) => {
 app.use("/api/auth",authRouter)
 app.use("/api/user",userRouter);
 app.use("/api/server",serverRouter);
-app.use("/api/msg",messageRouter);
+app.use("/api/message",messageRouter);
 app.use("/api/report",reportRouter);
 
 io.on('connection', (socket: Socket) => {

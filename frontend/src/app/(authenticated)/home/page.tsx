@@ -1,16 +1,30 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { HomeSidebar } from "@/components/home/home-sidebar";
 import { ChatPanel } from "@/components/chat/chat-panel"; 
 import { axiosInstance } from "@/api/axiosInstance";
 import { normalizeServerTree } from "@/lib/normalizeServerTree";
 import CreateServer from "@/components/home/CreateServer";
-import { set } from "date-fns";
+import { SocketProvider } from "@/context/SocketContext";
+import { RootState } from "@/store/store";
+import { useSelector } from "react-redux";
 
 export default function HomeLayout() {
   const [selectedServerId, setSelectedServerId] = useState<number | null>(null);
   const [createServerOpen, setcreateServerOpen] = useState(false)
+
+  const [userUSN, setUserUSN] = useState<String | undefined>(undefined);
+
+  const userUSNfromStore = useSelector((state: RootState) => state.user.usn);
+
+  useEffect(() => {
+    if (userUSNfromStore !== null && userUSNfromStore !== undefined) {
+      setUserUSN(userUSNfromStore);
+    }
+  }, [userUSNfromStore]);
+
+  console.log("User ID from Redux:", userUSN);
 
   // Fetch all allowed servers
   const { data: servers = [] } = useQuery({
@@ -75,7 +89,7 @@ export default function HomeLayout() {
   };
 
   return (
-    <>
+    <SocketProvider>
       <div className="flex h-screen">
         <HomeSidebar
           servers={servers}
@@ -86,16 +100,15 @@ export default function HomeLayout() {
           ownedServers={ownedServersData}
         />
         <div className="flex flex-1 flex-col overflow-hidden">
-          <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 bg-muted/40">
+          <main className="flex-1 overflow-y-auto p-2 bg-muted/40">
             {selectedServerId && selectedServer ? (
               <ChatPanel
                 serverId={selectedServerId}
                 serverName={selectedServer.name}
                 serverAbout={selectedServer.about}
                 serverOwnerId={selectedServer.ownerId}
-                messages={messages}
-                refetchMessages={refetchMessages}
-                // Pass socket, user info, etc. as needed
+                userUSN={userUSN}
+                allowAnonymous={selectedServer.allowAnonymous ?? false}
               />
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -106,6 +119,6 @@ export default function HomeLayout() {
         </div>
       </div>
       <CreateServer createServerOpen={createServerOpen} setCreateServerOpen={setcreateServerOpen} ownedServers={ownedServersData} />
-    </>
+    </SocketProvider>
   );
 }
