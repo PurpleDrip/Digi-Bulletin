@@ -1,3 +1,5 @@
+import { DptType } from "@prisma/client";
+
 const ALL_YEARS = [1, 2, 3, 4];
 const ALL_SEMESTERS = [1, 2, 3, 4, 5, 6, 7, 8];
 const ALL_SECTIONS = ["A", "B", "C", "D"];

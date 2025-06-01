@@ -24,6 +24,7 @@ export const USER_TYPES_CONFIG = {
 
   GUEST: { label: "Guest", description: "Temporary visitor.", needsDepartment: false, needsStudentInfo: false },
   ALUMNI: { label: "Alumni", description: "Former student of the institution.", needsDepartment: false, needsStudentInfo: false },
+  ADMIN:{ label: "Admin", description: "Administrator with full access.", needsDepartment: false, needsStudentInfo: false}
 } as const;
 
 export type UserTypeValue = keyof typeof USER_TYPES_CONFIG;

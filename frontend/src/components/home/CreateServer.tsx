@@ -34,7 +34,7 @@ const USER_TYPES = [
 
 // Tier 2 and Tier 1 user types
 const TIER2 = [
-  "ASSISTANT_PROFR", "ASSOCIATE_PROFR", "PROFR", "HOD", "CLERKS", "COORDINATOR"
+  "ASSISTANT_PROFR", "ASSOCIATE_PROFR", "PROFR", "HOD", "REGISTRAR","CLERKS", "COORDINATOR"
 ];
 const TIER1 = [
   "PRINCIPAL", "DEAN", "DIRECTOR", "LIBRARIAN", "LAB_ASSISTANT", "SECURITY_STAFF",
@@ -66,6 +66,7 @@ export default function CreateServer({
     aboutServer: "",
     parentId: "",
     allowAnonymous: false,
+    isPublic:true,
     audienceGroups: [{ ...defaultAudienceGroup }],
   });
 
@@ -85,7 +86,7 @@ export default function CreateServer({
       year: group.year.join(","),
       semester: group.semester.join(","),
       section: group.section.join(","),
-      usns: group.usns.join(","),
+      usns: (group.usns || []).join(","),
     }))
   );
 
@@ -139,6 +140,7 @@ export default function CreateServer({
       about: formData.aboutServer,
       parentId: formData.parentId ? Number(formData.parentId) : null,
       allowAnonymous: formData.allowAnonymous,
+      isPublic: formData.isPublic,
       audienceGroups: formData.audienceGroups.map(group => ({
         ...group,
         department:Array.isArray(group.department) ? group.department : [group.department],
@@ -175,12 +177,12 @@ export default function CreateServer({
     <Dialog open={createServerOpen} onOpenChange={setCreateServerOpen}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Create Server</DialogTitle>
+          <DialogTitle className="text-red-600 text-3xl">Create Server</DialogTitle>
           <DialogDescription>
             Fill out the server details and audience rules.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="h-[80vh] pr-4">
+        <ScrollArea className="max-h-[80vh] pr-4">
         <form onSubmit={handleSubmit}>
           <div className="flex flex-col gap-4 items-start mt-4">
             <div className="grid grid-cols-4 items-center gap-4">
@@ -243,139 +245,154 @@ export default function CreateServer({
               />
               <Label htmlFor="allowAnonymous">Allow Anonymous Messaging</Label>
             </div>
+            <div className="flex items-center mb-2 gap-2">
+              <Checkbox
+                id="isPublic"
+                checked={formData.isPublic}
+                onCheckedChange={(checked) => setFormData(prev => ({
+                  ...prev,
+                  isPublic: checked === true
+                }))}
+              />
+              <Label htmlFor="isPublic">Make this server public?</Label>
+            </div>
           </div>
 
-          <div className="py-2">
-            <Label className="text-md text-red-500">Audience Groups</Label>
-            {formData.audienceGroups.map((group, idx) => {
-              const fields = getAudienceFields(group.userType);
-              return (
-                <div key={idx} className="border rounded p-3 my-2">
-                  <div className="flex flex-col mb-2 ">
-                    <span className="font-medium text-left">Group {idx + 1}</span>
-                    {formData.audienceGroups.length > 1 && (
-                      <Button className="w-20 ml-auto" type="button" variant="destructive" size="sm" onClick={() => removeAudienceGroup(idx)}>
-                        Remove
-                      </Button>
-                    )}
-                  </div>
-                  <div className="flex flex-col gap-4">
-                    <div className="flex items-center mb-2 gap-2"> 
-                      <Checkbox
-                        id={`include-${idx}`}
-                        checked={group.include}
-                        onCheckedChange={(checked) =>
-                          handleAudienceGroupChange(idx, "include", checked === true)
-                        }
-                      />
-                      <Label htmlFor={`include-${idx}`}>Include</Label>
+          {
+            !formData.isPublic && (
+            <div className="py-2">
+              <Label className="text-md text-red-500">Audience Groups</Label>
+              {formData.audienceGroups.map((group, idx) => {
+                const fields = getAudienceFields(group.userType);
+                return (
+                  <div key={idx} className="border rounded p-3 my-2">
+                    <div className="flex flex-col mb-2 ">
+                      <span className="font-medium text-left">Group {idx + 1}</span>
+                      {formData.audienceGroups.length > 1 && (
+                        <Button className="w-20 ml-auto" type="button" variant="destructive" size="sm" onClick={() => removeAudienceGroup(idx)}>
+                          Remove
+                        </Button>
+                      )}
                     </div>
-
-                    <UserTypeScroll
-                      index={idx}
-                      value={group.userType}
-                      onChange={(index, value) => handleAudienceGroupChange(index, "userType", value)}
-                    />
-
-                    <div className="flex items-center justify-between px-4 py-2 gap-4">
-                      <div className="w-1/2 flex flex-col gap-2 flex-shrink-0 flex-grow-0">
-                        <Label>USNs (comma separated)</Label>
-                        <Input
-                          value={tempAudienceInputs[idx].usns}
-                          onChange={e => {
-                            const value = e.target.value;
-                            setTempAudienceInputs(inputs =>
-                              inputs.map((input, i) =>
-                                i === idx ? { ...input, usns: value } : input
-                              )
-                            );
-                          }}
-                          onBlur={e => {
-                            const arr = e.target.value.split(",").map(v => v.trim()).filter(Boolean);
-                            handleAudienceGroupChange(idx, "usns", arr);
-                          }}
-                          placeholder="e.g. 1MS20CS001,1MS20CS002"
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center mb-2 gap-2"> 
+                        <Checkbox
+                          id={`include-${idx}`}
+                          checked={group.include}
+                          onCheckedChange={(checked) =>
+                            handleAudienceGroupChange(idx, "include", checked === true)
+                          }
                         />
+                        <Label htmlFor={`include-${idx}`}>Include</Label>
                       </div>
-                      {fields.includes("department") && (
-                      <DepartmentTypeScroll
-                        index={idx}
-                        value={Array.isArray(group.department) ? group.department : [group.department]}
-                        onChange={(index, value) => handleAudienceGroupChange(index, "department", value)}
-                      />)}
-                    </div>
 
-                    {fields.includes("year") && (
+                      <UserTypeScroll
+                        index={idx}
+                        value={group.userType}
+                        onChange={(index, value) => handleAudienceGroupChange(index, "userType", value)}
+                      />
+
+                      <div className="flex items-center justify-between px-4 py-2 gap-4">
+                        <div className="w-1/2 flex flex-col gap-2 flex-shrink-0 flex-grow-0">
+                          <Label>USNs (comma separated)</Label>
+                          <Input
+                            value={tempAudienceInputs[idx]?.usns || ""}
+                            onChange={e => {
+                              const value = e.target.value;
+                              setTempAudienceInputs(inputs =>
+                                inputs.map((input, i) =>
+                                  i === idx ? { ...input, usns: value } : input
+                                )
+                              );
+                            }}
+                            onBlur={e => {
+                              const arr = e.target.value.split(",").map(v => v.trim()).filter(Boolean);
+                              handleAudienceGroupChange(idx, "usns", arr);
+                            }}
+                            placeholder="e.g. 1MS20CS001,1MS20CS002"
+                          />
+                        </div>
+                        {fields.includes("department") && (
+                        <DepartmentTypeScroll
+                          index={idx}
+                          value={Array.isArray(group.department) ? group.department : [group.department]}
+                          onChange={(index, value) => handleAudienceGroupChange(index, "department", value)}
+                        />)}
+                      </div>
+
+                      {fields.includes("year") && (
+                        <>
+                      <Label>Year (comma separated)</Label>
+                      <Input
+                        value={tempAudienceInputs[idx].year}
+                        onChange={e => {
+                          const value = e.target.value;
+                          setTempAudienceInputs(inputs =>
+                            inputs.map((input, i) =>
+                              i === idx ? { ...input, year: value } : input
+                            )
+                          );
+                        }}
+                        onBlur={e => {
+                          const arr = e.target.value.split(",").map(v => v.trim()).filter(Boolean);
+                          handleAudienceGroupChange(idx, "year", arr.map(v => v === "ALL" ? "ALL" : Number(v)));
+                        }}
+                        placeholder="e.g. ALL,1,2,3,4"
+                      />
+                      </>
+                      )}
+                      {fields.includes("semester") && (
                       <>
-                    <Label>Year (comma separated)</Label>
-                    <Input
-                      value={tempAudienceInputs[idx].year}
-                      onChange={e => {
-                        const value = e.target.value;
-                        setTempAudienceInputs(inputs =>
-                          inputs.map((input, i) =>
-                            i === idx ? { ...input, year: value } : input
-                          )
-                        );
-                      }}
-                      onBlur={e => {
-                        const arr = e.target.value.split(",").map(v => v.trim()).filter(Boolean);
-                        handleAudienceGroupChange(idx, "year", arr);
-                      }}
-                      placeholder="e.g. ALL,1,2,3,4"
-                    />
-                    </>
-                    )}
-                    {fields.includes("semester") && (
-                    <>
-                    <Label>Semester (comma separated)</Label>
-                    <Input
-                      value={tempAudienceInputs[idx].semester}
-                      onChange={e => {
-                        const value = e.target.value;
-                        setTempAudienceInputs(inputs =>
-                          inputs.map((input, i) =>
-                            i === idx ? { ...input, semester: value } : input
-                          )
-                        );
-                      }}
-                      onBlur={e => {
-                        const arr = e.target.value.split(",").map(v => v.trim()).filter(Boolean);
-                        handleAudienceGroupChange(idx, "semester", arr.map(v => v === "ALL" ? "ALL" : Number(v)));
-                      }}
-                      placeholder="e.g. ALL,1,2,6,7,8"
-                    />
-                    </>
-                    )}
-                    {fields.includes("section") && (
-                    <>
-                    <Label>Section (comma separated)</Label>
-                    <Input
-                      value={tempAudienceInputs[idx].section}
-                      onChange={e => {
-                        const value = e.target.value;
-                        setTempAudienceInputs(inputs =>
-                          inputs.map((input, i) =>
-                            i === idx ? { ...input, section: value } : input
-                          )
-                        );
-                      }}
-                      onBlur={e => {
-                        const arr = e.target.value.split(",").map(v => v.trim()).filter(Boolean);
-                        handleAudienceGroupChange(idx, "section", arr);
-                      }}
-                      placeholder="e.g. ALL,A,B,C"
-                    />
-                    </>
-                    )}
+                      <Label>Semester (comma separated)</Label>
+                      <Input
+                        value={tempAudienceInputs[idx].semester}
+                        onChange={e => {
+                          const value = e.target.value;
+                          setTempAudienceInputs(inputs =>
+                            inputs.map((input, i) =>
+                              i === idx ? { ...input, semester: value } : input
+                            )
+                          );
+                        }}
+                        onBlur={e => {
+                          const arr = e.target.value.split(",").map(v => v.trim()).filter(Boolean);
+                          handleAudienceGroupChange(idx, "semester", arr.map(v => v === "ALL" ? "ALL" : Number(v)));
+                        }}
+                        placeholder="e.g. ALL,1,2,6,7,8"
+                      />
+                      </>
+                      )}
+                      {fields.includes("section") && (
+                      <>
+                      <Label>Section (comma separated)</Label>
+                      <Input
+                        value={tempAudienceInputs[idx].section}
+                        onChange={e => {
+                          const value = e.target.value;
+                          setTempAudienceInputs(inputs =>
+                            inputs.map((input, i) =>
+                              i === idx ? { ...input, section: value } : input
+                            )
+                          );
+                        }}
+                        onBlur={e => {
+                          const arr = e.target.value.split(",").map(v => v.trim()).filter(Boolean);
+                          handleAudienceGroupChange(idx, "section", arr);
+                        }}
+                        placeholder="e.g. ALL,A,B,C"
+                      />
+                      </>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-            <Button type="button" variant="outline" onClick={addAudienceGroup}>
-              Add Audience Group
-            </Button>
-          </div>
+                );
+              })}
+              <Button type="button" variant="outline" className="border-red-800 hover:border-white" onClick={addAudienceGroup}>
+                Add Audience Group
+              </Button>
+            </div>
+            )
+          }
 
           <DialogFooter>
             <Button type="submit">Create Server</Button>

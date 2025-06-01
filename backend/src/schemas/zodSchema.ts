@@ -95,10 +95,11 @@ export const audienceGroupSchema = z.array(z.object({
 }));
 
 export const serverSchema=z.object({
-  name:z.string().min(2).max(20),
+  name:z.string().min(2).max(50),
   type:z.nativeEnum(ServerType),
-  about:z.string().min(3).max(35),
+  about:z.string().min(3).max(150),
   allowAnonymous:z.boolean(),
+  isPublic:z.boolean(),
   parentId:z.number().optional(),
   audienceGroups: audienceGroupSchema,
 })

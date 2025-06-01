@@ -14,26 +14,28 @@ export const validateRegisterUserInput=(req:Request,res:Response,next:NextFuncti
     const result=usnSchema.safeParse(usn);
 
     if (!result.success) {
+        console.log("USN Validation Failed", result.error);
         res.status(400).json({ 
             message:"Validation Failed",
             error: result.error.flatten() })
         return;
     }
 
-    const extraStudentInfo=z.object({
-        year: z.number().optional(),
-        semester: z.number().min(1).max(8).optional(),
-        section:z.enum(["A","B","C","D"],{
-          message:"The entered for field:Section is invalid."
-        }).optional(),
-    }).safeParse(req.body);
+    // const extraStudentInfo=z.object({
+    //     year: z.number().optional(),
+    //     semester: z.number().min(1).max(8).optional(),
+    //     section:z.enum(["A","B","C","D"],{
+    //       message:"The entered for field:Section is invalid."
+    //     }).optional(),
+    // }).safeParse(req.body);
 
-    if(!extraStudentInfo.success){
-        res.status(400).json({ 
-            message:"Validation Failed",
-            error: "Invalid Student Information Type."})
-        return;
-    }
+    // if(!extraStudentInfo.success){
+    //     console.log("Extra Student Info Validation Failed", extraStudentInfo.error);
+    //     res.status(400).json({ 
+    //         message:"Validation Failed",
+    //         error: "Invalid Student Information Type."})
+    //     return;
+    // }
 
     const providedData={
         usn,

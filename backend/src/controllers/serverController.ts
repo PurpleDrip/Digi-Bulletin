@@ -3,7 +3,6 @@ import { serverSchema } from "../schemas/zodSchema";
 import prisma from "../lib/prisma";
 import { DptType, Prisma, SectionType } from "@prisma/client";
 import { UserType } from '@prisma/client';
-import { normalize } from "path";
 import { normalizeAudienceGroups } from "../utils/normalizeAudienceGroups";
 
 export const createServer = async (req: Request, res: Response): Promise<void> => {
@@ -16,9 +15,7 @@ export const createServer = async (req: Request, res: Response): Promise<void> =
     serverData.parentId = undefined; 
   }
 
-  console.log("Received server data:", serverData);
   serverData.audienceGroups = normalizeAudienceGroups(audienceGroups);
-  console.log("Normalized audience groups:", serverData);
   const response = serverSchema.safeParse(serverData);
 
   if (!response.success) {
@@ -79,15 +76,23 @@ export const createServer = async (req: Request, res: Response): Promise<void> =
         serverData.audience = {
           create: {
             groups: {
-              create: response.data.audienceGroups.map((group) => ({
-                include: group.include,
-                userType: group.userType,
-                department: (group.department ?? []) as DptType[],
-                year: group.year ?? [],
-                semester: group.semester ?? [],
-                section: group.section ?? [],
-                usns: group.usns ?? []
-              }))
+              create: response.data.audienceGroups.map((group) => {
+
+                const validDepartments = Object.values(DptType);
+                const validatedDepartment = (group.department ?? [])
+                  .filter(dep => validDepartments.includes(dep as DptType))
+                  .map(dep => dep as DptType);
+
+                return {
+                  include: group.include,
+                  userType: group.userType,
+                  department: validatedDepartment,
+                  year: group.year ?? [],
+                  semester: group.semester ?? [],
+                  section: group.section ?? [],
+                  usns: group.usns ?? []
+                };
+              })
             }
           }
         };
@@ -187,13 +192,18 @@ export const getServers = async (
     return value !== null && value !== undefined;
   }
 
+  const validDepartments = Object.values(DptType);
+  const userDepartment = validDepartments.includes(user.department as DptType) 
+    ? user.department as DptType 
+    : DptType.ALL;
+
   // Build student OR clause
   const studentOr =
     user.type === "STUDENT"
       ? {
           include: true,
           userType: "STUDENT" as UserType,
-          department: { hasSome: [user.department ?? "ALL", "ALL"] },
+          department: {hasSome: [userDepartment, DptType.ALL]  },
           OR: [
             typeof user.year === "number" ? { year: { has: user.year } } : null,
             typeof user.semester === "number" ? { semester: { has: user.semester } } : null,
@@ -214,7 +224,7 @@ export const getServers = async (
     ? {
         include: true,
         userType: user.type as UserType,
-        department: { hasSome: [user.department ?? "ALL", "ALL"] },
+        department: {hasSome: [userDepartment, DptType.ALL]  }
       }
     : null;
 
@@ -245,9 +255,14 @@ export const getServers = async (
         userType: user.type as UserType,
       }
     : null;
+  
+  const usnCheck={
+    include:true,
+    usns: { has: user.usn },
+  }
 
   // Final OR array, filtering out nulls
-  const audienceOrConditions = [studentOr, tier2Or, tier1Or, otherOr].filter(notEmpty);
+  const audienceOrConditions = [studentOr, tier2Or, tier1Or, otherOr,usnCheck].filter(notEmpty);
 
   try {
     const servers = await prisma.server.findMany({
@@ -292,7 +307,8 @@ export const getOwnedServers=async (req:Request,res:Response):Promise<void>=>{
     try{
         const servers=await prisma.server.findMany({
             where:{
-                ownerId:userInfo.id
+                ownerId:userInfo.id,
+                status:"approved"
             },
             include:{
                 audience:{
