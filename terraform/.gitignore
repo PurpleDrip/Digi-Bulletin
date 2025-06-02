@@ -1,0 +1,25 @@
+# Local .terraform directories (provider, modules, plugin binaries, etc.)
+**/.terraform/*
+!**/.terraform/.gitignore  # in case modules have their own .gitignore
+
+# Terraform state files
+*.tfstate
+*.tfstate.*
+crash.log
+
+# Terraform plan files
+*.tfplan
+
+# Sensitive variable overrides (optional)
+*.tfvars
+*.tfvars.json
+
+# Ignore override files that are sometimes used for local config
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Ignore CLI configuration files
+.terraformrc
+terraform.rc

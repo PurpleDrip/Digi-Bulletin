@@ -1,6 +1,6 @@
 "use client";
 import { useState, useMemo, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery ,useQueryClient} from "@tanstack/react-query";
 import { HomeSidebar } from "@/components/home/home-sidebar";
 import { ChatPanel } from "@/components/chat/chat-panel"; 
 import { axiosInstance } from "@/api/axiosInstance";
@@ -9,12 +9,17 @@ import CreateServer from "@/components/home/CreateServer";
 import { SocketProvider } from "@/context/SocketContext";
 import { RootState } from "@/store/store";
 import { useSelector } from "react-redux";
+import { deleteServer } from "@/api/server";
+import { useToast } from "@/hooks/use-toast";
 
 export default function HomeLayout() {
+  const {toast}=useToast();
+  const queryClient = useQueryClient();
+
   const [selectedServerId, setSelectedServerId] = useState<number | null>(null);
   const [createServerOpen, setcreateServerOpen] = useState(false)
 
-  const [userUSN, setUserUSN] = useState<String | undefined>(undefined);
+  const [userUSN, setUserUSN] = useState<string | undefined>(undefined);
 
   const userUSNfromStore = useSelector((state: RootState) => state.user.usn);
 
@@ -67,7 +72,7 @@ export default function HomeLayout() {
     queryKey: ["messages", selectedServerId],
     queryFn: async () => {
       if (!selectedServerId) return [];
-      const res = await fetch(`/api/messages?serverId=${selectedServerId}`, { credentials: "include" });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_ENDPOINT_URL}/api/messages/get-messages?serverId=${selectedServerId}`, { credentials: "include" });
       const json = await res.json();
       return json.messages;
     },
@@ -87,6 +92,31 @@ export default function HomeLayout() {
   const handleEditServer = (serverId: number) => {
     // open modal or navigate to edit server page
   };
+  const handleDelete=async (serverId:number)=>{
+    if(!serverId)return;
+
+    console.log("Type at front",typeof serverId)
+    try{
+      const res=await deleteServer(serverId)
+
+      if(res.data.success){
+        toast({
+          title: "Server Deleted.",
+          description: `Server ID ${serverId} deleted Successfully.`,
+        });
+
+        queryClient.invalidateQueries({ queryKey: ["servers"] });
+        queryClient.invalidateQueries({ queryKey: ["ownedServers"] });
+      }
+    }catch(err){
+      console.log(err)
+        toast({
+          title: "Server Deletion Failed.",
+          description: `Couldnt Delete the server with ID ${serverId}.`,
+          variant: "destructive",
+        });
+    }
+  }
 
   return (
     <SocketProvider>
@@ -98,6 +128,7 @@ export default function HomeLayout() {
           onEditServer={handleEditServer}
           onCreateServer={handleCreateServer}
           ownedServers={ownedServersData}
+          onDeleteServer={handleDelete}
         />
         <div className="flex flex-1 flex-col overflow-hidden">
           <main className="flex-1 overflow-y-auto p-2 bg-muted/40">
@@ -106,6 +137,7 @@ export default function HomeLayout() {
                 serverId={selectedServerId}
                 serverName={selectedServer.name}
                 serverAbout={selectedServer.about}
+                serverType={selectedServer.type}
                 serverOwnerId={selectedServer.ownerId}
                 userUSN={userUSN}
                 allowAnonymous={selectedServer.allowAnonymous ?? false}

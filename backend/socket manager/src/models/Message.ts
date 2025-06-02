@@ -157,5 +157,4 @@ export interface MessageDocument extends IMessage, Document {
   reactionCounts: Record<ReactionType, number>;
 }
 
-// 9. Model export
 export default mongoose.model<MessageDocument>('Message', MessageSchema);

@@ -115,14 +115,10 @@ MessageSchema.index({ 'replyTo.messageId': 1 });
 
 // 7. Virtual for reaction counts
 MessageSchema.virtual('reactionCounts').get(function() {
-  const counts = { UPVOTE: 0, DOWNVOTE: 0 };
-  if (Array.isArray(this.reactions)) {
-    for (const r of this.reactions) {
-      if (r.type === "UPVOTE") counts.UPVOTE++;
-      if (r.type === "DOWNVOTE") counts.DOWNVOTE++;
-    }
-  }
-  return counts;
+  return this.reactions.reduce((acc, reaction) => {
+    acc[reaction.type] = (acc[reaction.type] || 0) + 1;
+    return acc;
+  }, {} as Record<ReactionType, number>);
 });
 
 // 8. TypeScript interfaces

@@ -1,88 +1,107 @@
-import { useState } from "react";
-import { Paperclip, Send, PlusCircle } from "lucide-react";
+import React, { useState } from "react";
+import { Send, PlusCircle } from "lucide-react";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Textarea } from "../ui/textarea";
+
+type ChatInputProps = {
+  onSend: (data: {
+    message?: string;
+    title?: string;
+    isAnonymous?: boolean;
+  }) => Promise<void>;
+  onSendPoll: (data: {
+    question: string;
+    options: string[];
+    isAnonymous?: boolean;
+    title?: string;
+  }) => Promise<void>;
+  allowAnonymous?: boolean;
+  userUSN?: string;
+};
 
 export function ChatInput({
   onSend,
-  userUSN,
-  allowAnonymous,
-}: {
-  onSend: (data: {
-    message?: string;
-    image?: File | null;
-    isAnonymous?: boolean;
-    title?: string;
-    isPoll?: boolean;
-    pollOptions?: string[];
-  }) => Promise<void>;
-  userUSN?: String;
-  allowAnonymous?: boolean;
-}) {
+  onSendPoll,
+  allowAnonymous = false,
+}: ChatInputProps) {
   const [message, setMessage] = useState("");
-  const [image, setImage] = useState<File | null>(null);
-  const [isAnonymous, setIsAnonymous] = useState(false);
   const [title, setTitle] = useState("");
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [showPoll, setShowPoll] = useState(false);
+  const [pollQuestion, setPollQuestion] = useState("");
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
 
-  // Handle poll option changes
-  const handlePollOptionChange = (idx: number, value: string) => {
-    setPollOptions((prev) =>
-      prev.map((opt, i) => (i === idx ? value : opt))
-    );
-  };
-  const addPollOption = () => setPollOptions((prev) => [...prev, ""]);
-  const removePollOption = (idx: number) =>
-    setPollOptions((prev) => prev.filter((_, i) => i !== idx));
-
-  // File/image attachment handler
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) setImage(e.target.files[0]);
-  };
-
-  // Send handler
+  // Send regular message
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (showPoll) {
-      const validOptions = pollOptions.filter((o) => o.trim() !== "");
-      if (validOptions.length < 2) return;
-      await onSend({
-        isPoll: true,
-        pollOptions: validOptions,
-      });
-      setShowPoll(false);
-      setPollOptions(["", ""]);
-    } else {
-      if (!message && !image) return;
-      await onSend({ message, image, isAnonymous, title });
-      setMessage("");
-      setImage(null);
-      setTitle("");
-    }
+    if (!message) return;
+    await onSend({ message, title, isAnonymous });
+    setMessage("");
+    setTitle("");
+  };
+
+  // Send poll
+  const handlePollSend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const options = pollOptions.filter((opt) => opt.trim() !== "");
+    if (!pollQuestion || options.length < 2) return;
+    await onSendPoll({ question: pollQuestion, options, isAnonymous, title });
+    setShowPoll(false);
+    setPollQuestion("");
+    setPollOptions(["", ""]);
+    setTitle("");
   };
 
   return (
-    <form
-      className="flex flex-col gap-2 px-4 py-2 bg-background border border-zinc-700 rounded-xl"
-      onSubmit={handleSend}
-    >
-      {/* Poll Creation Modal */}
+    <div>
+      {/* Poll Modal */}
       {showPoll && (
-        <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 mb-2">
-          <div className="font-semibold mb-2">Create a Poll</div>
+        <form
+          className="border border-white/20 rounded-lg p-4 mb-2 bg-background"
+          onSubmit={handlePollSend}
+        >
+          <div className="font-semibold mb-2 flex justify-between items-center">
+            
+            <div>
+              <span className="text-2xl text-red-500">Create a Poll</span>
+              <h1 className="text-sm text-gray-400 font-normal">Enter the question and options for your poll. At least two options are required.</h1>
+            </div>
+            <button
+              type="button"
+              className="text-xs text-red-400 border border-red-400 rounded px-2 py-1 ml-2 hover:bg-red-900/30"
+              onClick={() => setShowPoll(false)}
+            >
+              Exit Poll Mode
+            </button>
+          </div>
+          <div className="grid w-full gap-3 mt-8">
+            <Label htmlFor="message" className="text-red-500/80">Poll Question</Label>
+            <Textarea placeholder="Type your question here." id="message" className="bg-inherit"
+              value={pollQuestion}
+              onChange={(e) => setPollQuestion(e.target.value)}/>
+          </div>
+          <h1 className="font-semibold mt-4 text-red-500/80">Options</h1>
           {pollOptions.map((opt, idx) => (
             <div className="flex items-center gap-2 mb-1" key={idx}>
-              <input
+              <Input
                 type="text"
-                className="flex-1 rounded bg-muted px-2 py-1 text-sm outline-none"
+                className="mt-4 flex-1 rounded px-2 py-1 text-sm outline-none"
                 placeholder={`Option ${idx + 1}`}
                 value={opt}
-                onChange={(e) => handlePollOptionChange(idx, e.target.value)}
+                onChange={(e) =>
+                  setPollOptions((prev) =>
+                    prev.map((o, i) => (i === idx ? e.target.value : o))
+                  )
+                }
               />
               {pollOptions.length > 2 && (
                 <button
                   type="button"
                   className="text-red-500"
-                  onClick={() => removePollOption(idx)}
+                  onClick={() =>
+                    setPollOptions((prev) => prev.filter((_, i) => i !== idx))
+                  }
                 >
                   ×
                 </button>
@@ -91,85 +110,90 @@ export function ChatInput({
           ))}
           <button
             type="button"
-            className="text-blue-400 text-xs"
-            onClick={addPollOption}
+            className="text-red-400 text-xs"
+            onClick={() => setPollOptions((prev) => [...prev, ""])}
           >
             + Add Option
           </button>
-        </div>
+          <div className="flex gap-2 mt-4 justify-between">
+            <div className="flex items-center gap-4">
+              <input
+                type="text"
+                className="w-32 rounded bg-muted px-2 py-1 text-xs outline-none"
+                placeholder="Title (optional)"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+              {allowAnonymous && (
+                <label className="flex items-center gap-1 text-xs cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isAnonymous}
+                    onChange={() => setIsAnonymous((v) => !v)}
+                  />
+                  Anonymous
+                </label>
+              )}
+            </div>
+              <button
+                type="submit"
+                className={`bg-red-500/40 border border-red-500/20 text-white rounded px-2 py-1 text-md font-semibold `}
+              >
+                Create Poll
+              </button>
+            </div>
+
+        </form>
       )}
 
-      <div className="flex gap-2 items-center">
-        {/* File/Image Attach */}
-        <label className="cursor-pointer">
-          <Paperclip className="w-5 h-5 text-muted-foreground" />
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleFileChange}
-          />
-        </label>
-        {/* Title */}
-        <input
-          type="text"
-          className="w-32 rounded bg-muted px-2 py-1 text-xs outline-none"
-          placeholder="Title (optional)"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        {/* Anonymous toggle */}
-        {allowAnonymous && (
-        <label className="flex items-center gap-1 text-xs cursor-pointer">
-          <input
-            type="checkbox"
-            checked={isAnonymous}
-            onChange={() => setIsAnonymous((v) => !v)}
-          />
-          Anonymous
-        </label>)}
-        {/* Create Poll */}
-        <button
-          type="button"
-          className="flex items-center gap-1 text-purple-400 hover:text-purple-300 text-xs"
-          onClick={() => setShowPoll((v) => !v)}
-        >
-          <PlusCircle size={16} />
-          Poll
-        </button>
-        {/* Send Button */}
-        <button
-          type="submit"
-          className="ml-auto p-1"
-          disabled={
-            (!message && !image && !showPoll) ||
-            (showPoll && pollOptions.filter((o) => o.trim() !== "").length < 2)
-          }
-        >
-          <Send className="w-5 h-5 text-primary" />
-        </button>
-        {/* Preview for attachments */}
-        {image && (
-          <div className="ml-2">
-            <img
-              src={URL.createObjectURL(image)}
-              alt="preview"
-              className="w-8 h-8 object-cover rounded"
-            />
-          </div>
-        )}
-      </div>
-      {/* Message input (hide if poll) */}
+      {/* Regular Chat Input */}
       {!showPoll && (
-        <input
-          type="text"
-          className="flex-1 rounded-full bg-muted px-3 py-2 text-sm outline-none"
-          placeholder="Type a message..."
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          autoComplete="off"
-        />
+        <form
+          className="flex gap-2 items-center px-4 py-2 bg-background border border-zinc-700 rounded-full"
+          onSubmit={handleSend}
+        >
+          <input
+            type="text"
+            className="flex-1 rounded-full bg-muted px-3 py-2 text-sm outline-none"
+            placeholder="Type a message..."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            autoComplete="off"
+          />
+          <input
+            type="text"
+            className="w-32 rounded bg-muted px-2 py-1 text-xs outline-none"
+            placeholder="Title (optional)"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+          {allowAnonymous && (
+            <label className="flex items-center gap-1 text-xs cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isAnonymous}
+                onChange={() => setIsAnonymous((v) => !v)}
+              />
+              Anonymous
+            </label>
+          )}
+          <button
+            type="button"
+            className="flex items-center gap-1 text-purple-400 hover:text-purple-300 text-xs"
+            onClick={() => setShowPoll(true)}
+          >
+            <PlusCircle size={16} />
+            Poll
+          </button>
+          <button
+            type="submit"
+            className="p-1"
+            disabled={!message}
+          >
+            <Send className="w-5 h-5 text-primary" />
+          </button>
+        </form>
       )}
-    </form>
+    </div>
   );
 }

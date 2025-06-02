@@ -4,6 +4,7 @@ import prisma from "../lib/prisma";
 import { DptType, Prisma, SectionType } from "@prisma/client";
 import { UserType } from '@prisma/client';
 import { normalizeAudienceGroups } from "../utils/normalizeAudienceGroups";
+import Message from "../models/Message";
 
 export const createServer = async (req: Request, res: Response): Promise<void> => {
   const { id } = res.locals;
@@ -332,6 +333,22 @@ export const getOwnedServers=async (req:Request,res:Response):Promise<void>=>{
             message:"Internal Server Error."
         })
         return;
+    }
+}
+
+export const deleteServer=async(req:Request,res:Response):Promise<void>=>{
+  const id=Number(req.query.id);
+  try {
+      const server = res.locals.server;
+      await prisma.server.delete({
+        where: { id }
+      });
+      await Message.deleteMany({serverId:id})
+      res.json({ success: true, message: "Server deleted successfully" });
+      return;
+    } catch (e) {
+      console.error("Delete error:", e);
+      res.status(500).json({ success: false, message: "Deletion failed" });
     }
 }
 

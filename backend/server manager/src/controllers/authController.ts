@@ -141,3 +141,35 @@ export const appendCookies = (req: Request, res: Response,next:NextFunction): vo
 
     next();
 };
+
+export const logoutUser=(req:Request,res:Response)=>{
+    const token=req.cookies?.DigiBulletinCookie;
+
+    if(!token){
+        res.status(200).json({
+            success:true,
+            message:"Cookies already removed."
+        })
+        return;
+    }
+
+    try{
+        res.clearCookie("DigiBulletinCookie",{
+            httpOnly: true,
+            secure: true,
+            sameSite: "strict",            
+        });
+
+        res.status(200).json({
+            success:true,
+            message:"Cookies removed successfully."
+        })
+        return;
+    }catch(e){
+        res.status(500).json({
+            success:false,
+            message:"Error while removing cookies."
+        })
+        return;
+    }
+}

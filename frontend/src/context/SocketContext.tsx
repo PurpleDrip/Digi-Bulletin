@@ -10,7 +10,7 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-    socketRef.current = io("http://localhost:5001", { withCredentials: true });
+    socketRef.current = io(process.env.NEXT_PUBLIC_BACKEND_ENDPOINT_SOCKET_URL || "http://localhost:5001", { withCredentials: true });
     return () => {
       socketRef.current?.disconnect();
     };

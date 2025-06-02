@@ -28,19 +28,26 @@ export const authenticateUser=(req:Request,res:Response,next:NextFunction)=>{
 }
 
 export const authenticateOwner=async (req:Request,res:Response,next:NextFunction):Promise<void>=>{
-
+    const serverId=Number(req.query.id);
     const {id}=res.locals;
-    const {serverName}=req.body;
+
+    if (!serverId) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid server ID format"
+      });
+      return;
+    }
 
     try{
         const server=await prisma.server.findFirst({
-            where:{name:serverName}
+            where:{id:serverId}
         });
 
         if(!server){
             res.status(400).json({
                 success:false,
-                message:"Server Name not found."
+                message:"Invalid Server ID."
             })
             return; 
         }
@@ -52,6 +59,8 @@ export const authenticateOwner=async (req:Request,res:Response,next:NextFunction
             })
             return;
         }
+
+        next();
     }catch(e){
         console.log(e);
         res.status(500).json({

@@ -31,3 +31,7 @@ export const registerUser=(data:{
 })=>{
     return axiosInstance.post('/user/register-user',data);
 }
+
+export const logout=()=>{
+    return axiosInstance.post("/auth/logout")
+}

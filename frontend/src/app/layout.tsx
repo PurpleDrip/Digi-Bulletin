@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from '@/components/theme/theme-provider';
 import { QueryProvider } from '@/components/providers/query-provider';
 import { ReduxProvider } from '@/components/providers/redux-provider';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -29,21 +31,35 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning> 
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ReduxProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <QueryProvider>
-              <div className="relative flex min-h-screen flex-col">
-                <main className="flex-1">{children}</main>
-              </div>
-              <Toaster />
-            </QueryProvider>
-          </ThemeProvider>
-        </ReduxProvider>
+        <>
+          <ReduxProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <QueryProvider>
+                <div className="relative flex min-h-screen flex-col">
+                  <main className="flex-1">{children}</main>
+                </div>
+                <Toaster />
+              </QueryProvider>
+            </ThemeProvider>
+          </ReduxProvider>
+          <ToastContainer
+            position="top-right"
+            autoClose={7000}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="dark"
+          />
+        </>
       </body>
     </html>
   );

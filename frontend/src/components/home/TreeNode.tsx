@@ -1,15 +1,37 @@
 import { useState } from "react";
 import { ChevronDown, ChevronRight, Users, Shield, Book, User } from "lucide-react";
+import {
+  GraduationCap,
+  Calendar,
+  Mic,
+  AlertCircle,
+  MessageCircle,
+  Users2,
+  LifeBuoy,
+  FlaskConical,
+  Hammer,
+  FileText,
+  Briefcase,
+  Building2
+} from 'lucide-react';
 
-// Map server types or names to icons
 const typeIconMap: Record<string, any> = {
   GENERAL: Book,
   DEPARTMENTAL: Shield,
   CLASSROOM: Users,
   FACULTY: User,
-  ADMIN: Shield,
-  STUDENT_BODY: Users,
-  // Add more as needed
+  ADMINISTRATION: Building2,
+  STUDENT_BODY: Users2,
+  SEMINAR: Mic,
+  EVENT: Calendar,
+  ANNOUNCEMENT: AlertCircle,
+  DISCUSSION: MessageCircle,
+  CLUB: Users,
+  SUPPORT: LifeBuoy,
+  RESEARCH: FlaskConical,
+  WORKSHOP: Hammer,
+  EXAM: FileText,
+  ALUMNI: GraduationCap,
 };
 
 export function TreeNode({
