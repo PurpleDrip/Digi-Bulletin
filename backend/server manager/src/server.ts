@@ -39,6 +39,8 @@ app.use("/api/messages",messageRouter)
 
 const PORT = process.env.PORT || 5000;
 
+console.log("CORS allowed for",process.env.FRONTEND_URL);
+
 mongoose.connect(process.env.MONGO_URL as string)
   .then(()=>{
     console.log("Connected to MongoDB Successfully.")

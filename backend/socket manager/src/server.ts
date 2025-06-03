@@ -34,6 +34,9 @@ io.on('connection', (socket: Socket) => {
     });
 });
 
+console.log("CORS allowed for",process.env.FRONTEND_URL)
+console.log("Node ENV",process.env.NODE_ENV)
+
 const PORT = process.env.PORT || 5001;
 
 mongoose.connect(process.env.MONGO_URL as string)

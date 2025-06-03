@@ -2,67 +2,63 @@ pipeline {
     agent any
 
     environment {
-        AWS_REGION = 'us-east-1'
-        CLUSTER_NAME = 'chat-app-cluster'
-        ECR_REGISTRY = '' 
+        DOCKER_COMPOSE = 'docker-compose'
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                checkout scm
+                git branch: 'main', 
+                url: 'https://github.com/your-org/your-repo.git'
             }
         }
 
-        stage('Configure AWS') {
+        stage('Build Images') {
             steps {
-                withCredentials([[
-                    $class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'AWS_CREDENTIALS',
-                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
-                ]]) {
-                    script {
-                        ECR_REGISTRY = sh(
-                            script: "aws sts get-caller-identity --query Account --output text | tr -d '\n'",
-                            returnStdout: true
-                        ) + ".dkr.ecr.${AWS_REGION}.amazonaws.com"
-                    }
-                }
+                sh """
+                $DOCKER_COMPOSE build \
+                    server-handler \
+                    socket-manager \
+                    frontend
+                """
             }
         }
 
-        stage('Login to ECR') {
+        stage('Start Services') {
             steps {
-                withCredentials([[
-                    $class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'AWS_CREDENTIALS'
-                ]]) {
-                    sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}"
-                }
+                sh "$DOCKER_COMPOSE up -d"
             }
         }
 
-        stage('Build & Push Docker Image') {
+        stage('Configure Monitoring') {
             steps {
-                script {
-                    docker.build("chat-app").push("${ECR_REGISTRY}/chat-app:latest")
-                }
+                // Wait for Prometheus to be ready
+                sh "sleep 30" 
+
+                // Add Prometheus datasource to Grafana
+                sh """
+                curl -X POST "http://localhost:3000/api/datasources" \
+                    -u admin:admin \
+                    -H "Content-Type: application/json" \
+                    -d '{
+                        "name":"Prometheus",
+                        "type":"prometheus",
+                        "url":"http://prometheus:9090",
+                        "access":"proxy"
+                    }'
+                """
             }
         }
+    }
 
-        stage('Deploy to EKS') {
-            steps {
-                withCredentials([[
-                    $class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'AWS_CREDENTIALS'
-                ]]) {
-                    sh """
-                        aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${AWS_REGION}
-                        kubectl apply -f k8s/
-                    """
-                }
-            }
+    post {
+        always {
+            sh "$DOCKER_COMPOSE down || true"
+        }
+        failure {
+            mail to: 'devops@example.com',
+                 subject: "Build Failed - ${env.JOB_NAME}",
+                 body: "Check build ${env.BUILD_URL}"
         }
     }
 }
