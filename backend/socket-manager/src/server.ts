@@ -4,8 +4,6 @@ import { Server, Socket } from 'socket.io';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import client from "prom-client";
-const register = client.register;
-client.collectDefaultMetrics({ register });
 
 import { chatRoutes } from './routes/chat';
 import { configRoutes } from './routes/config';
@@ -21,6 +19,13 @@ const io = new Server(server, {
   }
 });
 
+const collectDefaultMetrics = client.collectDefaultMetrics;
+collectDefaultMetrics();
+
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', client.register.contentType);
+  res.end(await client.register.metrics());
+});
 // io.use(authMiddleware);
 
 io.on('connection', (socket: Socket) => {

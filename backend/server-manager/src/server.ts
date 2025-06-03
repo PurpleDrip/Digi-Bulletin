@@ -4,8 +4,6 @@ import dotenv from 'dotenv';
 import bodyParser from 'body-parser';
 import cookieParser from "cookie-parser"
 import client from "prom-client";
-const register = client.register;
-client.collectDefaultMetrics({ register });
 
 import userRouter from './routes/userRouter';
 import serverRouter from './routes/serverRouter';
@@ -27,6 +25,13 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser())
 
+const collectDefaultMetrics = client.collectDefaultMetrics;
+collectDefaultMetrics();
+
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', client.register.contentType);
+  res.end(await client.register.metrics());
+});
 app.get('/api/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'ok' });
 });

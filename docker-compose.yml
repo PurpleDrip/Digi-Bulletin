@@ -1,13 +1,14 @@
-version: '3.8'
-
 services:
   server-handler:
     build:
-      context: ./backend/server-handler
+      context: "./backend/server-manager"
       dockerfile: Dockerfile
+    image: purpledrip/server-handler:latest
     container_name: server-handler
     ports:
       - "5000:5000"
+    env_file:
+      - ./backend/server-manager/.env
     environment:
       - NODE_ENV=production
     networks:
@@ -18,13 +19,16 @@ services:
       timeout: 3s
       retries: 3
 
-  socket-manager:
+  socket-handler:
     build:
-      context: ./backend/socket-handler
+      context: "./backend/socket-manager"
       dockerfile: Dockerfile
-    container_name: socket-manager
+    image: purpledrip/socket-handler:latest
+    container_name: socket-handler
     ports:
       - "5001:5001"
+    env_file:
+      - ./backend/socket-manager/.env
     environment:
       - NODE_ENV=production
     networks:
@@ -34,14 +38,17 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    image: purpledrip/frontend-db:latest
     container_name: frontend
+    env_file:
+      -  ./frontend/.env
     ports:
       - "3000:3000"
     networks:
       - app-network
     depends_on:
       - server-handler
-      - socket-manager
+      - socket-handler
 
   prometheus:
     image: prom/prometheus:latest
@@ -59,7 +66,7 @@ services:
     image: grafana/grafana-oss:latest
     container_name: grafana
     ports:
-      - "3000:3000"
+      - "3001:3000"
     volumes:
       - grafana-storage:/var/lib/grafana
     networks:

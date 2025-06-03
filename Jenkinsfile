@@ -2,63 +2,46 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_COMPOSE = 'docker-compose'
+        NODE_ENV = 'production'
     }
 
     stages {
-        stage('Checkout Code') {
+        stage('Git Checkout') {
             steps {
-                git branch: 'main', 
-                url: 'https://github.com/your-org/your-repo.git'
+                git branch: 'main', url: 'https://github.com/PurpleDrip/Digi-Bulletin.git'
             }
         }
 
-        stage('Build Images') {
+        stage('Docker Compose Build') {
             steps {
-                sh """
-                $DOCKER_COMPOSE build \
-                    server-handler \
-                    socket-manager \
-                    frontend
-                """
+                sh 'docker-compose build'
+
+                sh '''
+                    docker tag purpledrip_server-handler:latest purpledrip/server-handler:latest
+                    docker tag purpledrip_socket-handler:latest purpledrip/socket-handler:latest
+                    docker tag purpledrip_frontend-db:latest purpledrip/frontend-db:latest
+                '''
             }
         }
 
-        stage('Start Services') {
+        stage('Docker Login and Push') {
             steps {
-                sh "$DOCKER_COMPOSE up -d"
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh '''
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker push purpledrip/server-handler:latest
+                        docker push purpledrip/socket-handler:latest
+                        docker push purpledrip/frontend-db:latest
+                    '''
+                }
             }
         }
 
-        stage('Configure Monitoring') {
+        stage('Docker Compose Up') {
             steps {
-                // Wait for Prometheus to be ready
-                sh "sleep 30" 
-
-                // Add Prometheus datasource to Grafana
-                sh """
-                curl -X POST "http://localhost:3000/api/datasources" \
-                    -u admin:admin \
-                    -H "Content-Type: application/json" \
-                    -d '{
-                        "name":"Prometheus",
-                        "type":"prometheus",
-                        "url":"http://prometheus:9090",
-                        "access":"proxy"
-                    }'
-                """
+                sh 'docker-compose down'
+                sh 'docker-compose up -d'
             }
-        }
-    }
-
-    post {
-        always {
-            sh "$DOCKER_COMPOSE down || true"
-        }
-        failure {
-            mail to: 'devops@example.com',
-                 subject: "Build Failed - ${env.JOB_NAME}",
-                 body: "Check build ${env.BUILD_URL}"
         }
     }
 }
