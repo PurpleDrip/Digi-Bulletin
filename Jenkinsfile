@@ -15,12 +15,6 @@ pipeline {
         stage('Docker Compose Build') {
             steps {
                 sh 'docker-compose build'
-
-                sh '''
-                    docker tag purpledrip_server-handler:latest purpledrip/server-handler:latest
-                    docker tag purpledrip_socket-handler:latest purpledrip/socket-handler:latest
-                    docker tag purpledrip_frontend-db:latest purpledrip/frontend-db:latest
-                '''
             }
         }
 
