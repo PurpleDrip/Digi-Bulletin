@@ -1,1 +1,1 @@
-SCM
+this project is made for devops.
