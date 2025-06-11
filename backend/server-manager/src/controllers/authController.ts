@@ -156,8 +156,8 @@ export const logoutUser=(req:Request,res:Response)=>{
     try{
         res.clearCookie("DigiBulletinCookie",{
             httpOnly: true,
-            secure: true,
-            sameSite: "strict",            
+            secure: false,
+            sameSite: "lax",            
         });
 
         res.status(200).json({
