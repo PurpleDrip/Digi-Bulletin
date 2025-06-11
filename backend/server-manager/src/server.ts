@@ -16,7 +16,7 @@ dotenv.config();
 
 const app = express();
 app.use(cors({
-  origin: "*",
+  origin: "http://15.207.20.226:3000",
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials:true,
 }));
