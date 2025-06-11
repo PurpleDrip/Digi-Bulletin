@@ -136,7 +136,7 @@ export const appendCookies = (req: Request, res: Response,next:NextFunction): vo
         httpOnly: true,
         secure: true,
         expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day in milliseconds
-        sameSite: "strict",
+        sameSite: "none",
     });
 
     next();
