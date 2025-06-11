@@ -46,7 +46,7 @@ function useServerMessages(serverId: number | null) {
     queryFn: async () => {
       if (!serverId) return [];
       const res = await fetch(
-        `http://15.207.20.226:3001/api/messages/get-messages?serverId=${serverId}`,
+        `http://15.207.20.226:5000/api/messages/get-messages?serverId=${serverId}`,
         { credentials: "include" }
       );
       const json = await res.json();
