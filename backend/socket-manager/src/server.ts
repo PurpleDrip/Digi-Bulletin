@@ -14,7 +14,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL,
+    origin: "*",
     credentials: true,
   }
 });
@@ -53,6 +53,6 @@ mongoose.connect(process.env.MONGO_URL as string)
     console.log(e)
   })
 
-server.listen(PORT, () => {
+server.listen(5001,"0.0.0.0", () => {
   console.log(`Socket.IO running on port ${PORT}`);
 });

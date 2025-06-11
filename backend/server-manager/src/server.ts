@@ -16,7 +16,7 @@ dotenv.config();
 
 const app = express();
 app.use(cors({
-  origin: process.env.FRONTEND_URL,
+  origin: "*",
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials:true,
 }));
@@ -55,6 +55,6 @@ mongoose.connect(process.env.MONGO_URL as string)
     console.log(e)
   })
 
-app.listen(PORT, () => {
+app.listen(5000,'0.0.0.0' ,() => {
   console.log(`Server running on port ${PORT}`);
 });
