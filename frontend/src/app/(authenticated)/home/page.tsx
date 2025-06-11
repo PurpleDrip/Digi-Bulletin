@@ -72,7 +72,7 @@ export default function HomeLayout() {
     queryKey: ["messages", selectedServerId],
     queryFn: async () => {
       if (!selectedServerId) return [];
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_ENDPOINT_URL}/api/messages/get-messages?serverId=${selectedServerId}`, { credentials: "include" });
+      const res = await fetch(`http://15.207.20.226:3000/api/messages/get-messages?serverId=${selectedServerId}`, { credentials: "include" });
       const json = await res.json();
       return json.messages;
     },
