@@ -134,9 +134,9 @@ export const appendCookies = (req: Request, res: Response,next:NextFunction): vo
 
     res.cookie("DigiBulletinCookie", cookie, {
         httpOnly: true,
-        secure: true,
+        secure: false,
         expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day in milliseconds
-        sameSite: "none",
+        sameSite: "lax",
     });
 
     next();
